@@ -1,7 +1,6 @@
-# Awesome Project Build with TypeORM
+# NodeJS, Django (python) and MySQL based PUBG Stats Site
 
-Steps to run this project:
-
-1. Run `npm i` command
-2. Setup database settings inside `ormconfig.json` file
-3. Run `npm start` command
+- Uses Django as the backend, to communicate to MySQL using the amazing Django ORM.
+- NodeJS handles rendering templates using nunjucks.
+- NodeJS simply passes requests from the front-end to the backend.
+- Python does all the heavy lifting.
