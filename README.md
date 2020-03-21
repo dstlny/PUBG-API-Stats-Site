@@ -7,6 +7,7 @@
 
 # Getting started
 - Install the python dependencies using `pip install -r requirements.txt`.
+- Install node dependencies using `npm install`.
 - Setup MySQL and change the settings within `statsapp/settings.py` to reflect your local database.
 - Run the initial migrations for Django `python manange.py migrate`, so it generates the neccessary schema and tables.
 - Start django first using `python python manange.py runserver`
