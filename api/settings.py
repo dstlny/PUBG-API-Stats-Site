@@ -1,3 +1,4 @@
+API_TOKEN = ''
 
 API_HEADER = {
     "accept": "application/vnd.api+json",
