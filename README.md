@@ -1,2 +1,7 @@
-# PUBG API Stats Site
- This is justa a very basic Stats Site based on NoeJS and Django, using MySQL as a backend database, to pull player matches from the PUBG API
+# Awesome Project Build with TypeORM
+
+Steps to run this project:
+
+1. Run `npm i` command
+2. Setup database settings inside `ormconfig.json` file
+3. Run `npm start` command
