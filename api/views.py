@@ -29,20 +29,22 @@ from django.views.decorators.cache import cache_page
 from django.views.decorators.vary import vary_on_headers
 from django.core.cache import cache
 from django.shortcuts import get_object_or_404
-from django.views.decorators.csrf import csrf_exempt
 
-@csrf_exempt
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
+@api_view(['GET'])
 def status(request):
-	return JsonResponse({
+	return Response({
 		'status': 'OK'
 	})
 
-@csrf_exempt
+@api_view(['GET', 'POST'])
 def search(request):
 
 	if request.method == 'POST':
 
-		body = json.loads(request.body)
+		body = request.data
 
 		player_name = body.get('player_name', None)
 
@@ -53,7 +55,6 @@ def search(request):
 		player_platform_url_cache_key = '{}_{}_platform_url'.format(player_name, platform)
 		player_player_url_cache_key = '{}_{}_player_url'.format(player_name, platform)
 		player_player_response_cache_key = '{}_{}_player_response'.format(player_name, platform)
-
 		cached_platform_url = cache.get(player_platform_url_cache_key, None)
 
 		if not cached_platform_url:
@@ -71,7 +72,7 @@ def search(request):
 			player_url = cached_player_url
 
 		cached_player_response = cache.get(player_player_response_cache_key, None)
-		
+
 		if not cached_player_response:
 			player_response = make_request(player_url)
 			cache.set(player_player_response_cache_key, player_response, 60)
@@ -101,9 +102,9 @@ def search(request):
 			error = 'Sorry, looks like this player does not exist.'
 			ajax_data['error'] = error
 
-		return JsonResponse(ajax_data)
+		return Response(ajax_data)
 
-@csrf_exempt
+@api_view(['GET', 'POST'])
 def retrieve_matches(request):
 
 	start_time = time.time()
@@ -111,7 +112,7 @@ def retrieve_matches(request):
 	request_again = False
 	redo_cache = False
 
-	body = json.loads(request.body)
+	body = request.data
 	
 	player_id = body.get('player_id', None)
 	perspective = body.get('perspective', None)
@@ -183,7 +184,7 @@ def retrieve_matches(request):
 				request_again = True
 			
 			if not request_again and cached_ajax_data:
-				return JsonResponse(cached_ajax_data, safe=False)
+				return Response(cached_ajax_data)
 
 	else:
 		request_again = True
@@ -191,11 +192,7 @@ def retrieve_matches(request):
 	if request_again:
 		redo_cache = True
 
-	print('> request_again ', request_again)
-
 	if request_again:
-
-		print('>> player_id = {} perspective = {} and game_mode = {} '.format(player_id, perspective, game_mode))
 
 		if player_id and perspective and game_mode:
 			
@@ -222,11 +219,7 @@ def retrieve_matches(request):
 
 			roster_data = Roster.objects.filter(**kwargs).order_by('-match__created').distinct()
 
-			print(roster_data.exists())
-
 			if roster_data and roster_data.exists():
-
-				print('>>> roster_data exists')
 
 				if game_mode and perspective:
 					message = "<strong>{}</strong> {} {} matches returned in ".format(roster_data.count(), game_mode.upper(), perspective)
@@ -264,8 +257,6 @@ def retrieve_matches(request):
 
 			else:
 
-				print('>>> git log')
-
 				if game_mode and perspective:
 					message = "It would seem no {} {} matches exist for this user".format(game_mode.upper(), perspective)
 				elif game_mode:
@@ -280,24 +271,16 @@ def retrieve_matches(request):
 					'api_id': current_player.api_id
 				}
 
-				print(ajax_data)
-
 	else:
 
 		ajax_data = cached_ajax_data
 
-	
+	return Response(ajax_data)
 
-	return JsonResponse(ajax_data, safe=False)
-
-@csrf_exempt
+@api_view(['GET', 'POST'])
 def retrieve_season_stats(request):
-	
-	print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-	print(request.body)
-	print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 
-	body = json.loads(request.body)
+	body = request.data
 
 	player_id = body.get('player_id', None)
 	perspective = body.get('perspective', None)
@@ -308,8 +291,6 @@ def retrieve_season_stats(request):
 	player_cache_key = '{}_season_data'.format(player_id)
 
 	cached_ajax_data = cache.get(player_cache_key, None)
-
-	print('>>> cached_ajax_data ', cached_ajax_data)
 
 	redo = False
 
@@ -325,7 +306,6 @@ def retrieve_season_stats(request):
 	else:
 		redo = True
 
-	print('>>> redo ', redo)
 	if redo:
 		
 		perspective = correct_perspective(perspective)
@@ -373,4 +353,4 @@ def retrieve_season_stats(request):
 	else:
 		ajax_data = cached_ajax_data
 
-	return JsonResponse(ajax_data, safe=False)
+	return Response(ajax_data)
