@@ -17,7 +17,6 @@ app.register(require('fastify-static'), {
 	prefix: '/static/', // optional: default '/'
 })
 
-// Declare a route
 app.get('/', async(req, res) => {
 	return res.view('index.html', {
 		platform_selections: constants.PLATFORM_SELECTIONS,
@@ -97,6 +96,7 @@ app.post('/retrieve_matches', async(req, res) => {
 })
 
 app.post('/retrieve_season_stats', async(req, res) => {
+
 	player_id = req.body.player_id
 	platform = req.body.platform
 	perspective = req.body.perspective
@@ -117,19 +117,57 @@ app.post('/retrieve_season_stats', async(req, res) => {
 	}
 })
 
-app.listen(7009, () => {
+function checkStatus(log, answer, promise){
+	if(promise == true)
+		return new Promise((resolve, reject) => {
+			axios.get('http://127.0.0.1:8000/api/status')
+			.then(api_response => {
+				if(api_response.status == 200 && api_response.data.status == 'OK'){
+					if(log === true)
+						console.log(`Backend Django service up and running on port ${8000}!`)
+					if(answer === true)
+						resolve(false);
+				}
+			})
+			.catch(error => {
+				if(log === true)
+					console.log(`Seems Backend services are down...`)
+				if(answer === true)
+					resolve(true);
+			})
+		});
+	else
+		axios.get('http://127.0.0.1:8000/api/status')
+		.then(api_response => {
+			if(api_response.status == 200 && api_response.data.status == 'OK'){
+				if(log === true)
+					console.log(`Backend Django service up and running on port ${8000}!`)
+				if(answer === true)
+					return false
+			}
+		})
+		.catch(error => {
+			if(log === true)
+				console.log(`Seems Backend services are down...`)
+			if(answer === true)
+				return true
+		})
+		
+}
 
-	console.log(`NodeJS up and running on port ${7009}!`)
-
-	axios.get('http://127.0.0.1:8000/api/status')
-	.then(api_response => {
-		if(api_response.status == 200 && api_response.data.status == 'OK'){
-			console.log(`Backend Django service up and running on port ${8000}!`)
-		}
+app.get('/backend_status', async(req, res) => {
+	checkStatus(false, true, true)
+	.then(function(result) {
+		return res.send({
+			backend_status: result
+		})
 	})
 	.catch(error => {
-		if(error.code == 'ECONNREFUSED'){
-			console.log(`Seems Backend services are down...`)
-		}
+		console.log(error)
 	})
+})
+
+app.listen(7009, () => {
+	console.log(`NodeJS up and running on port ${7009}!`)
+	checkStatus(true, false, false)
 })

@@ -258,13 +258,13 @@ def retrieve_matches(request):
 			else:
 
 				if game_mode and perspective:
-					message = "It would seem no {} {} matches exist for this user".format(game_mode.upper(), perspective)
+					message = "It would seem no {} {} matches exist for this user for the last 14 days.".format(game_mode.upper(), perspective)
 				elif game_mode:
-					message = "It would seem no TPP/FPP {} matches exist for this user".format(game_mode.upper())
+					message = "It would seem no TPP/FPP {} matches exist for this user for the last 14 days.".format(game_mode.upper())
 				elif perspective:
-					message = "It would seem no {} (SOLO, DUO, SQUAD) matches exist for this user".format(perspective.upper())
+					message = "It would seem no {} (SOLO, DUO, SQUAD) matches exist for this user for the last 14 days.".format(perspective.upper())
 				else:
-					message = "It would seem no TPP/FPP (SOLO, DUO, SQUAD) matches exist for this user"
+					message = "It would seem no TPP/FPP (SOLO, DUO, SQUAD) matches exist for this user for the last 14 days."
 
 				ajax_data = {
 					'error': message,

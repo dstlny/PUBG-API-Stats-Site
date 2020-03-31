@@ -212,6 +212,7 @@ def parse_player_matches(match_json_list, player_id):
 				created=match_date,
 				map=map,
 				mode=match_mode,
+				api_url=build_match_url(platform_url, match_shard),
 				is_custom_match=match_custom
 			)
 			this_match.save()
