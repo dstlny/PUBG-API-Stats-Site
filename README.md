@@ -12,7 +12,7 @@
 - Setup MySQL and change the settings within `statsapp/settings.py` to reflect your local database.
 - Change `API_TOKEN` within `api/settings.py` to your PUBG API Token.
 - Run the initial migrations for Django `python manange.py migrate`, so it generates the neccessary schema and tables.
-- Start django first using `python python server.py`
+- Start django first using `python server.py`
 - Change `threads=8` in `server.py` to the amount of cores your machine has.
 - Start node using `node server` or `nodemon server` if you have nodemon installed.
 - Navigate to localhost, and search away.
