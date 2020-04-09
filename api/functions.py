@@ -15,6 +15,7 @@ import time
 from datetime import datetime
 from django.shortcuts import get_object_or_404
 from django.shortcuts import _get_queryset
+from django.utils.timezone import make_aware
 
 session = requests.Session()
 
@@ -146,10 +147,13 @@ def make_request(url):
 def parse_player_object(platform_url, player_response):
 
 	matches = []
+
+	match_queryset = Match.objects.only('api_id')
+	player_queryset = Player.objects.only('api_id')
 	
 	if 'errors' not in player_response:
 		player_id = player_response['data'][0]['id']
-		player = Player.objects.filter(api_id=player_id)
+		player = player_queryset.filter(api_id=player_id)
 
 		if not player.exists():
 			player = Player(
@@ -162,7 +166,7 @@ def parse_player_object(platform_url, player_response):
 		for match in player_response['data'][0]['relationships']['matches']['data']:
 			match_id = get_player_match_id(player_id, match['id'])
 			if match_id:
-				match_exists = Match.objects.filter(api_id=match_id)
+				match_exists = match_queryset.filter(api_id=match_id)
 				if not match_exists.exists():
 					match_url = build_match_url(platform_url, match['id'])
 					match_request = make_request(match_url)
@@ -175,7 +179,6 @@ def parse_player_object(platform_url, player_response):
 def get_player_match_id(player_id, match_id):
 	return "{}_{}".format(player_id, match_id)  
 
-
 def get_object_or_none(klass, *args, **kwargs):
 	queryset = _get_queryset(klass)
 	try:
@@ -185,10 +188,19 @@ def get_object_or_none(klass, *args, **kwargs):
 
 def parse_player_matches(match_json_list, player_id):
 
+	match_queryset = Map.objects.only('reference')
+	player_queryset = Player.objects.only('api_id')
+
 	for match in match_json_list:
 		if 'data' in match and 'attributes' in match['data']:
+
+			start_time = time.time()
+
 			match_id = match['data']['id']
 			match_date = datetime.strptime(match['data']['attributes']['createdAt'].replace('Z', ''), "%Y-%m-%dT%H:%M:%S")
+
+			match_date = make_aware(match_date)
+
 			match_map =  get_map_name(match['data']['attributes']['mapName'])
 			match_map_reference = match['data']['attributes']['mapName']
 			match_mode = correct_mode(match['data']['attributes']['gameMode'])
@@ -196,7 +208,7 @@ def parse_player_matches(match_json_list, player_id):
 			match_shard = match['data']['attributes']['shardId']
 			platform_url = build_url(match_shard)
 
-			map = Map.objects.filter(reference__iexact=match_map_reference)
+			map = match_queryset.filter(reference__iexact=match_map_reference)
 
 			if not map.exists():
 				map = Map(
@@ -212,7 +224,7 @@ def parse_player_matches(match_json_list, player_id):
 				created=match_date,
 				map=map,
 				mode=match_mode,
-				api_url=build_match_url(platform_url, match_shard),
+				api_url=build_match_url(platform_url, match_id),
 				is_custom_match=match_custom
 			)
 			this_match.save()
@@ -263,7 +275,7 @@ def parse_player_matches(match_json_list, player_id):
 				participant_placement = participant['attributes']['stats'].get('winPlace', None)
 				participant_name = participant['attributes']['stats'].get('name', None)
 				participant_player_api_id =  participant['attributes']['stats'].get('playerId', None)
-				participant_player_object = get_object_or_none(Player, api_id=participant_player_api_id)
+				participant_player_object = get_object_or_none(player_queryset, api_id=participant_player_api_id)
 	
 				if not participant_player_object:
 					participant_player_object = Player(
@@ -288,10 +300,27 @@ def parse_player_matches(match_json_list, player_id):
 					participant=participant_object
 				)
 				roster_participant.save()
+			
+
+			seconds_taken = time.time() - start_time
+			print(
+				"--- parsing {match_id} took {seconds} seconds ---".format(
+					match_id=match_id,
+					seconds="{:0.3f}".format(seconds_taken)
+				)
+			)
 
 def get_player_matches(platform_url, player_response, perspective, game_mode):
 	player_id, player_matches = parse_player_object(platform_url, player_response)
 	parse_player_matches(player_matches, player_id)
+
+	# from django.db import connection
+
+	# for query in connection.queries:
+	# 	sql = query.get('sql', None)
+	# 	time = query.get('time', None)
+	# 	activity = f'{sql} : {time}'
+	# 	print(activity)
 
 def populate_seasons():
 	platforms = [
@@ -326,6 +355,8 @@ def retrieve_player_season_stats(player_id, platform):
 	current_season = get_object_or_none(Season, is_current=True, platform=platform.lower())
 	current_player = get_object_or_404(Player, api_id=player_id, platform_url=platform_url)
 
+	player_season_stats_queryset = PlayerSeasonStats.objects.only('player', 'season', 'mode')
+
 	if current_season:
 		season_url = build_season_url(
 			base_url=platform_url,
@@ -340,7 +371,7 @@ def retrieve_player_season_stats(player_id, platform):
 
 			## we should really only save the details that we do not have
 			game_modes = [
-				game_mode for game_mode in game_mode_stats if not(PlayerSeasonStats.objects.filter(
+				game_mode for game_mode in game_mode_stats if not(player_season_stats_queryset.filter(
 					player=current_player,
 					season=current_season,
 					mode=game_mode

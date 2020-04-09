@@ -6,7 +6,7 @@ import collections
 from api.settings import API_HEADER
 from api.functions import (
 	build_url, build_lifetime_url, make_request, correct_perspective, correct_mode,
-	build_player_url, get_player_matches, retrieve_player_season_stats, populate_seasons
+	build_player_url, get_player_matches, retrieve_player_season_stats, populate_seasons, build_player_account_id_url
 )
 
 # populate_seasons()
@@ -125,6 +125,7 @@ def retrieve_matches(request):
 	cached_ajax_data = cache.get(player_cache_key, None)
 
 	current_player = get_object_or_404(Player, api_id=player_id)
+
 	player_names = set(list(Participant.objects.filter(player__api_id=player_id).values_list('player_name', flat=True)))
 
 	if cached_ajax_data:
@@ -274,7 +275,7 @@ def retrieve_matches(request):
 	else:
 
 		ajax_data = cached_ajax_data
-
+		
 	return Response(ajax_data)
 
 @api_view(['GET', 'POST'])
@@ -294,8 +295,9 @@ def retrieve_season_stats(request):
 
 	redo = False
 
+	perspective = correct_perspective(perspective)
+
 	if cached_ajax_data:
-		perspective = correct_perspective(perspective)
 
 		for x in cached_ajax_data:
 			keys = x.keys() if x.keys() else None
@@ -307,8 +309,6 @@ def retrieve_season_stats(request):
 		redo = True
 
 	if redo:
-		
-		perspective = correct_perspective(perspective)
 
 		kwargs = {}
 		exclude = {}
@@ -318,7 +318,13 @@ def retrieve_season_stats(request):
 		elif perspective and perspective == 'tpp':
 			exclude['mode__icontains'] = 'fpp'
 
-		season_stats = PlayerSeasonStats.objects.filter(
+		season_stats_queryset = PlayerSeasonStats.objects.only(
+			'player',
+			'season',
+			'mode'
+		).select_related('season')
+
+		season_stats = season_stats_queryset.filter(
 			player=player,
 			season__is_current=True,
 			season__platform=platform,

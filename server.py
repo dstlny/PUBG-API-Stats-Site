@@ -5,6 +5,6 @@ from statsapp.wsgi import application
 if __name__ == '__main__':
     serve(
         application,
-        threads=8,
+        threads=16,
         port='8000'
     )

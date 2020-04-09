@@ -9,14 +9,14 @@ function checkStatus(log, answer, promise){
 					if(log === true)
 						console.log(`Backend Django service up and running on port ${8000}!`)
 					if(answer === true)
-						resolve(false);
+						resolve(false)
 				}
 			})
 			.catch(error => {
 				if(log === true)
 					console.log(`Seems Backend services are down...`)
 				if(answer === true)
-					resolve(true);
+					resolve(true)
 			})
 		});
 	else

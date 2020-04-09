@@ -1,11 +1,10 @@
-const fastify = require('fastify'),
-	  app = fastify(),
+const fastify = require('fastify')(),
 	  path = require('path'),
 	  utlity = require('./utility')
 
-app.register(require('fastify-formbody'))
+fastify.register(require('fastify-formbody'))
 
-app.register(require('point-of-view'), {
+fastify.register(require('point-of-view'), {
 	engine: {
 		nunjucks: require('nunjucks')
 	},
@@ -13,18 +12,18 @@ app.register(require('point-of-view'), {
   	includeViewExtension: false
 })
 
-app.register(require('fastify-static'), {
+fastify.register(require('fastify-static'), {
 	root: path.join(__dirname, 'static'),
-	prefix: '/static/', // optional: default '/'
+	prefix: '/static/'
 })
 
-app.register(require('./routes/index/index'))
-app.register(require('./routes/search/search'))
-app.register(require('./routes/retrieve_season_stats/retrieve_season_stats'))
-app.register(require('./routes/retrieve_matches/retrieve_matches'))
-app.register(require('./routes/backend_status/backend_status'))
+fastify.register(require('./routes/index/index'))
+fastify.register(require('./routes/search/search'))
+fastify.register(require('./routes/retrieve_season_stats/retrieve_season_stats'))
+fastify.register(require('./routes/retrieve_matches/retrieve_matches'))
+fastify.register(require('./routes/backend_status/backend_status'))
 
-app.listen(7009, () => {
+fastify.listen(7009, () => {
 	console.log(`NodeJS up and running on port ${7009}!`)
 	utlity.checkStatus(true, false, false)
 })
