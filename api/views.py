@@ -6,7 +6,7 @@ import collections
 from api.settings import API_HEADER
 from api.functions import (
 	build_url, build_lifetime_url, make_request, correct_perspective, correct_mode,
-	build_player_url, get_player_matches, retrieve_player_season_stats, populate_seasons, build_player_account_id_url
+	build_player_url, get_player_matches, retrieve_player_season_stats, populate_seasons, build_player_account_id_url,
 )
 
 # populate_seasons()
@@ -32,6 +32,7 @@ from django.shortcuts import get_object_or_404
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from django.shortcuts import redirect
 
 @api_view(['GET'])
 def status(request):
@@ -73,9 +74,17 @@ def search(request):
 
 		cached_player_response = cache.get(player_player_response_cache_key, None)
 
-		if not cached_player_response:
+		if not cached_player_response or 'data' not in cached_player_response:
 			player_response = make_request(player_url)
-			cache.set(player_player_response_cache_key, player_response, 60)
+
+			if 'data' not in player_response:
+				potential_current_player = Participant.objects.filter(player_name=player_name)
+				if potential_current_player.exists():
+					potential_current_player = potential_current_player.first()
+					player_url = potential_current_player.player.api_url
+					player_response = make_request(player_url)
+					
+			cache.set(player_player_response_cache_key, player_response, 120)
 		else:
 			player_response = cached_player_response
 
@@ -83,7 +92,10 @@ def search(request):
 
 		if 'data' in player_response:
 
-			player_id = player_response['data'][0]['id']
+			try:
+				player_id = player_response['data'][0]['id']
+			except:
+				player_id =  player_response['data']['id']
 
 			ajax_data['player_id'] = player_id
 			ajax_data['player_name']  = player_name
@@ -91,11 +103,21 @@ def search(request):
 			perspective = correct_perspective(perspective)
 			game_mode = correct_mode(game_mode)
 
-			pool = multiprocessing.Pool(processes=2)
-			pool.apply_async(get_player_matches, (platform_url, player_response, perspective, game_mode))
-			pool.apply_async(retrieve_player_season_stats, (player_id,  platform))
-			pool.close()
-			pool.join()
+			if not cached_player_response:
+				pool = multiprocessing.Pool(processes=1)
+				print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'.format(player_name))
+				pool.apply_async(get_player_matches, (platform_url, player_response, perspective, game_mode))
+
+				season_cache = '{}_season_data'.format(player_id)
+				cached_season_data = cache.get(season_cache, None)
+				
+				if not cached_season_data:
+
+					pool._processes = 2
+					pool._repopulate_pool()
+					pool.apply_async(retrieve_player_season_stats, (player_id,  platform))
+				
+				pool.close()
 
 		else:
 
@@ -152,16 +174,21 @@ def retrieve_matches(request):
 
 			this_perspective = correct_perspective(perspective)
 			this_game_mode = correct_mode(game_mode)
-
+			
 			if this_game_mode and this_perspective:
 				mode_fiter = "{}-{}".format(this_game_mode, this_perspective)
 				kwargs['rosterparticipant__roster__match__mode__iexact'] = mode_fiter
+				message = "<strong>{roster_data_count}</strong> {} {} matches returned in ".format(this_game_mode.upper(), this_perspective)
 			elif this_game_mode:
 				mode_fiter = this_game_mode
 				kwargs['rosterparticipant__roster__match__mode__icontains'] = mode_fiter
+				message = "<strong>{roster_data_count}</strong> TPP/FPP {} matches returned in ".format(this_game_mode.upper())
 			elif this_perspective:
 				mode_fiter = this_perspective
 				kwargs['rosterparticipant__roster__match__mode__icontains'] = mode_fiter
+				message = "<strong>{roster_data_count}</strong> {} (SOLO, DUO, SQUAD) matches returned in ".format(this_perspective.upper())
+			else:
+				message = "<strong>{roster_data_count}</strong> TPP/FPP (SOLO, DUO, SQUAD) matches returned in "
 
 			kwargs['rosterparticipant__roster__participants__player_name__in'] = player_names
 			kwargs['rosterparticipant__roster__match__api_id__icontains'] = player_id
@@ -170,19 +197,28 @@ def retrieve_matches(request):
 				**kwargs
 			).order_by('-match__created').distinct()
 
-			test_data = [
-				{
-					'map': roster.match.map.name if roster.match.map else None,
-					'mode': roster.match.mode.upper(),
-					'custom_match': 'Yes' if roster.match.is_custom_match else 'No',
-					'date_created': datetime.strftime(roster.match.created, '%d/%m/%Y %H:%M'),
-					'team_details': ''.join(["{}: {} kill(s) | {} damage<br>".format(x.player_name,x.kills,x.damage)for x in roster.participants.all()]),
-					'team_placement': roster.placement
-				} for roster in roster_data
-			]
+			message = "{}<strong>{}</strong>(s)".format(message.format(roster_data_count=roster_data.count()), "{0:.2f}".format(time.time() - start_time))
 
-			if len(cached_data) != len(test_data):
-				request_again = True
+			test_data = {
+				'perspective': perspective,
+				'game_mode': this_game_mode,
+				'message': message,
+				'data':[
+					{
+						'map': roster.match.map.name if roster.match.map else None,
+						'mode': roster.match.mode.upper(),
+						'custom_match': 'Yes' if roster.match.is_custom_match else 'No',
+						'date_created': datetime.strftime(roster.match.created, '%d/%m/%Y %H:%M'),
+						'team_details': ''.join(["{}: {} kill(s) | {} damage<br>".format(x.player_name,x.kills,x.damage) for x in roster.participants.all()]),
+						'team_placement': roster.placement
+					} for roster in roster_data
+				],
+				'api_id': current_player.api_id
+			}
+
+			
+			if len(cached_data) < len(test_data['data']):
+				cached_ajax_data = test_data
 			
 			if not request_again and cached_ajax_data:
 				return Response(cached_ajax_data)
@@ -257,6 +293,9 @@ def retrieve_matches(request):
 					cache.set(player_cache_key, ajax_data, 60)
 
 			else:
+
+				if not roster_data.exists():
+					return redirect(request.build_absolute_uri())
 
 				if game_mode and perspective:
 					message = "It would seem no {} {} matches exist for this user for the last 14 days.".format(game_mode.upper(), perspective)
@@ -340,7 +379,7 @@ def retrieve_season_stats(request):
 			season_stat_key = '{}_season_stats'.format(mode)
 
 			this_dict[season_stat_key] = {
-				'{}_season_stats'.format(mode): correct_mode(mode.replace('_', ' ')),
+				'{}_season_stats'.format(mode): correct_mode(mode.replace('_', ' ').upper()),
 				'{}_season_matches'.format(mode): "{} {}".format(x.rounds_played, 'Matches Played'),
 				'{}_season_kills__text'.format(mode): 'Kills',
 				'{}_season_kills__figure'.format(mode): x.kills,
