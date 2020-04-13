@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, HttpRequest
 
 import collections
 
@@ -7,6 +7,7 @@ from api.settings import API_HEADER
 from api.functions import (
 	build_url, build_lifetime_url, make_request, correct_perspective, correct_mode,
 	build_player_url, get_player_matches, retrieve_player_season_stats, populate_seasons, build_player_account_id_url,
+	make_request, build_match_url, get_match_telemetry_from_match
 )
 
 # populate_seasons()
@@ -15,6 +16,8 @@ from api.models import *
 
 import time
 from datetime import datetime
+from datetime import timedelta
+from django.utils import timezone
 
 ## try import orjson, fallback to normal json module upon failure
 try:
@@ -32,7 +35,9 @@ from django.shortcuts import get_object_or_404
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.request import Request
 from django.shortcuts import redirect
+from dateutil.parser import parse
 
 @api_view(['GET'])
 def status(request):
@@ -103,21 +108,20 @@ def search(request):
 			perspective = correct_perspective(perspective)
 			game_mode = correct_mode(game_mode)
 
-			if not cached_player_response:
-				pool = multiprocessing.Pool(processes=1)
-				print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'.format(player_name))
-				pool.apply_async(get_player_matches, (platform_url, player_response, perspective, game_mode))
+			pool = multiprocessing.Pool(processes=1)
+			print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'.format(player_name))
+			pool.apply_async(get_player_matches, (platform_url, player_response, perspective, game_mode))
 
-				season_cache = '{}_season_data'.format(player_id)
-				cached_season_data = cache.get(season_cache, None)
-				
-				if not cached_season_data:
+			season_cache = '{}_season_data'.format(player_id)
+			cached_season_data = cache.get(season_cache, None)
+			
+			if not cached_season_data:
 
-					pool._processes = 2
-					pool._repopulate_pool()
-					pool.apply_async(retrieve_player_season_stats, (player_id,  platform))
-				
-				pool.close()
+				pool._processes = 2
+				pool._repopulate_pool()
+				pool.apply_async(retrieve_player_season_stats, (player_id,  platform))
+			
+			pool.close()
 
 		else:
 
@@ -190,14 +194,24 @@ def retrieve_matches(request):
 			else:
 				message = "<strong>{roster_data_count}</strong> TPP/FPP (SOLO, DUO, SQUAD) matches returned in "
 
+			fourteen_days_ago = timezone.now() - timedelta(days=14)
+
 			kwargs['rosterparticipant__roster__participants__player_name__in'] = player_names
 			kwargs['rosterparticipant__roster__match__api_id__icontains'] = player_id
+			kwargs['rosterparticipant__roster__match__created__gte'] = fourteen_days_ago
 
 			roster_data = Roster.objects.filter(
 				**kwargs
 			).order_by('-match__created').distinct()
 
-			message = "{}<strong>{}</strong>(s)".format(message.format(roster_data_count=roster_data.count()), "{0:.2f}".format(time.time() - start_time))
+			message = "{}<strong>{}</strong>(s)".format(
+				message.format(
+					roster_data_count=roster_data.count()
+				),
+				"{0:.2f}".format(
+					time.time() - start_time
+				)
+			)
 
 			test_data = {
 				'perspective': perspective,
@@ -209,8 +223,9 @@ def retrieve_matches(request):
 						'mode': roster.match.mode.upper(),
 						'custom_match': 'Yes' if roster.match.is_custom_match else 'No',
 						'date_created': datetime.strftime(roster.match.created, '%d/%m/%Y %H:%M'),
-						'team_details': ''.join(["{}: {} kill(s) | {} damage<br>".format(x.player_name,x.kills,x.damage) for x in roster.participants.all()]),
-						'team_placement': roster.placement
+						'team_details': ''.join([f"{x.player_name}: {x.kills} kill(s) | {x.damage} damage<br>" for x in roster.participants.all()]),
+						'team_placement': roster.placement,
+						'actions': f'<a href="/match_detail/{roster.match.api_id}/" class="btn btn-link btn-sm active" role="button">View Match</a>'
 					} for roster in roster_data
 				],
 				'api_id': current_player.api_id
@@ -251,8 +266,11 @@ def retrieve_matches(request):
 				mode_fiter = perspective
 				kwargs['rosterparticipant__roster__match__mode__icontains'] = mode_fiter
 
+			fourteen_days_ago = timezone.now() - timedelta(days=14)
+
 			kwargs['rosterparticipant__roster__participants__player_name__in'] = player_names
 			kwargs['rosterparticipant__roster__match__api_id__icontains'] = player_id
+			kwargs['rosterparticipant__roster__match__created__gte'] = fourteen_days_ago
 
 			roster_data = Roster.objects.filter(**kwargs).order_by('-match__created').distinct()
 
@@ -279,11 +297,12 @@ def retrieve_matches(request):
 							'mode': roster.match.mode.upper(),
 							'custom_match': 'Yes' if roster.match.is_custom_match else 'No',
 							'date_created': datetime.strftime(roster.match.created, '%d/%m/%Y %H:%M'),
-							'team_details': ''.join(["{}: {} kill(s) | {} damage<br>".format(x.player_name,x.kills,x.damage)for x in roster.participants.all()]),
-							'team_placement': roster.placement
+							'team_details': ''.join([f"{x.player_name}: {x.kills} kill(s) | {x.damage} damage<br>" for x in roster.participants.all()]),
+							'team_placement': roster.placement,
+							'actions': f'<a href="/match_detail/{roster.match.api_id}/" class="btn btn-link btn-sm active" role="button">View Match</a>'
 						} for roster in roster_data
 					],
-					'api_id': current_player.api_id
+					'api_id': current_player.api_id,
 				}
 
 				if cache.has_key(player_cache_key) and redo_cache:
@@ -293,9 +312,6 @@ def retrieve_matches(request):
 					cache.set(player_cache_key, ajax_data, 60)
 
 			else:
-
-				if not roster_data.exists():
-					return redirect(request.build_absolute_uri())
 
 				if game_mode and perspective:
 					message = "It would seem no {} {} matches exist for this user for the last 14 days.".format(game_mode.upper(), perspective)
@@ -399,3 +415,79 @@ def retrieve_season_stats(request):
 		ajax_data = cached_ajax_data
 
 	return Response(ajax_data)
+
+
+@api_view(['GET'])
+def match_detail(request, match_id):
+
+	match_exists =  Match.objects.filter(api_id__iexact=match_id)
+
+	split = match_id.split('_')
+	account_id = split[0]
+	match_id = split[1]
+
+	if match_exists.exists():
+		match = match_exists.first()
+		match_url = match.api_url
+
+		if not match_url or match_id not in match_url:
+			current_player = get_object_or_404(Player, api_id=account_id)
+			platform_url = current_player.platform_url
+
+			match_url = build_match_url(platform_url, match_id)
+
+		match_json = make_request(match_url)
+
+		get_match_telemetry_from_match(
+			match_json=match_json,
+			match=match
+		)
+
+		telemetry = Telemetry.objects.filter(match=match)
+		telemetry_events = TelemetryEvent.objects.filter(telemetry__in=telemetry)
+
+		log_match_start = get_object_or_404(telemetry_events, event_type__iexact='LogMatchStart')
+		total_match_kills = get_object_or_404(telemetry_events, event_type__iexact='LogTotalMatchKills')
+		log_match_end = get_object_or_404(telemetry_events, event_type__iexact='LogMatchEnd')
+
+		log_match_start_timestamp = parse(log_match_start.timestamp).time()
+		log_match_start_timestamp = str(log_match_start_timestamp).split('.')[0]
+		log_match_end_timestamp = parse(log_match_end.timestamp).time()
+		log_match_end_timestamp = str(log_match_end_timestamp).split('.')[0]
+
+		FMT = '%H:%M:%S'
+
+		telemetry_events = telemetry_events.exclude(event_type__iexact='LogTotalMatchKills')
+
+		elapased_time = datetime.strptime(log_match_end_timestamp, FMT) - datetime.strptime(log_match_start_timestamp, FMT)
+		heals_used = telemetry_events.filter(event_type__iexact='LogItemUse').count()
+
+		match_roster = get_object_or_404(Roster, match=match)
+
+		telemetry_data = {
+			'player_kills': total_match_kills.description,
+			'match_id': log_match_start.telemetry.match.api_id.split('_')[1],
+			'match_elapsed_time': f'{elapased_time} minutes',
+			'match_map_name': log_match_start.telemetry.match.map.name,
+			'match_heals_used': heals_used,
+			'team_details': [
+				{
+					'player_name': x.player_name,
+					'kills': x.kills,
+					'damage': x.damage
+				} for x in match_roster.participants.all() if match_roster
+			],
+			'events':[
+				{
+					'timestamp': datetime.strftime(parse(x.timestamp), '%H:%M'),
+					'event': x.description
+				} for x in telemetry_events			
+			]
+		}
+
+		ajax_data = {
+			'telemetry_data': telemetry_data
+		}
+
+		return Response(ajax_data)
+		

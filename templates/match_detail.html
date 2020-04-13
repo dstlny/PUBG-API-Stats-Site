@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block body %}
+
+
+
+	<script type="application/javascript">
+		$(document).ready(function() {
+			telem_data = [
+				{% for telemetry in telemetry_data.events %}
+					['{{ telemetry.timestamp }}', '{{ telemetry.event|safe }}'],
+				{% endfor %}
+			];
+
+
+			team_mate_date = [
+				{% for team_data in telemetry_data.team_details %}
+					['{{ team_data.player_name }}', '{{ team_data.kills }}', '{{ team_data.damage }}'],
+				{% endfor %}
+			];
+
+			$('#telemetry_datatable_datatable').DataTable({
+				data: telem_data,
+				pageLength: 5,
+				order: [[ 0, "asc" ]],
+				scrollY:  "400px",
+				scrollCollapse: true,
+				paging: false,
+				bFilter: true,
+				bSort: true,
+				bLengthChange: true,
+			});
+
+			$('#team_datatable_datatable').DataTable({
+				data: team_mate_date,
+				pageLength: 5,
+				order: [[ 1, "desc" ]],
+				scrollY:  "200px",
+				scrollCollapse: true,
+				paging: false,
+				bFilter: true,
+				bSort: true,
+				bLengthChange: true,
+			});
+		});
+	</script>
+
+	<div class="container">
+
+		<div class='row'>
+
+			<div class="col-md-6">
+				<div class="card" id='match_detail_container'>
+					<div class="card-header" style='text-align: center'>
+						Match Details
+					</div>
+					<div class="card-body">
+
+						<div class="list-group d-flex flex-row flex-wrap">
+							<p class="list-group-item text-center" style='width: 50%;'>
+								Match ID:<br>{{ telemetry_data.match_id }}
+							</p>
+							<p class="list-group-item text-center" style='width: 50%;'>
+								Match Map:<br>{{ telemetry_data.match_map_name }}
+							</p>
+						</div>
+						<div class="list-group d-flex flex-row flex-wrap">
+							<p class="list-group-item text-center" style='width: 50%;'>
+								Your Kills: <br>{{ telemetry_data.player_kills }}
+							</p>
+							<p class="list-group-item text-center" style='width: 50%;'>
+								Match elapsed time: <br>{{ telemetry_data.match_elapsed_time }}
+							</p>
+						</div>
+						<div class="list-group d-flex flex-row flex-wrap">
+							<p class="list-group-item text-center" style='width: 50%;'>
+								Heals/Boosts used: <br>{{ telemetry_data.match_heals_used }}
+							</p>
+						</div>
+	
+					</div>
+				</div>
+				<br>
+				<div class="card" id='match_detail_container'>
+					<div class="card-header" style='text-align: center'>
+						Team Details
+					</div>
+					<div class='card-body'>
+						<table class='table table-condensed hover' id='team_datatable_datatable' style='width: 100%'>
+							<thead>
+								<tr>
+									<th width='33%'>Player name</th>
+									<th width='33%'>Kills</th>
+									<th width='33%'>Damage</th>
+								</tr>
+							</thead>
+							<tbody>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+
+			<div class="col-md-6" style='height: 150px'>
+				<div class="card" id='telemetry_datatable_container'>
+					<div class="card-header" style='text-align: center'>
+						Match events
+					</div>
+					<div class="card-body">
+						<table class='table table-condensed hover' id='telemetry_datatable_datatable'  style="width:100%;">
+							<thead>
+								<tr>
+									<th width='30%'>Timestamp</th>
+									<th width='70%'>Event</th>
+								</tr>
+							</thead>
+							<tbody>
+							</tbody>
+						</table>
+					</div>
+				</div>
+
+			</div>
+
+		</div>
+
+	</div>
+
+{% endblock %}

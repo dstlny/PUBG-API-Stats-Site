@@ -15,6 +15,7 @@ class Match(models.Model):
     mode = models.CharField(max_length=255, blank=True, null=True)
     map = models.ForeignKey('Map', on_delete=models.CASCADE)
     is_custom_match = models.IntegerField(blank=True, null=True)
+    # full_match = models.BooleanField(default=False)
 
     def __str__(self):
         return "{} - {}".format(self.api_id, self.map.name)
@@ -96,14 +97,14 @@ class Roster(models.Model):
     participants = models.ManyToManyField('Participant', through='Rosterparticipant')
 
     def __str__(self):
-        return "{} - {}".format(self.api_id, self.match.api_id)
+        return f"{self.api_id} - {self.match.api_id}"
 
 class RosterParticipant(models.Model):
     participant = models.ForeignKey('Participant', on_delete=models.CASCADE)
     roster = models.ForeignKey('Roster', on_delete=models.CASCADE)
 
     def __str__(self):
-        return "{} - {}".format(self.participant.player_name, self.roster.api_id)
+        return f"{self.participant.player_name} - {self.roster.api_id}"
 
 class Season(models.Model):
     api_id = models.CharField(max_length=255)
@@ -115,3 +116,28 @@ class Season(models.Model):
     def __str__(self):
         return "{} - {} - {}".format(self.api_id, self.platform, 'Current' if self.is_current else 'Not current')
 
+class Telemetry(models.Model):
+    api_id = models.CharField(max_length=255)
+    api_url = models.CharField(max_length=255)
+    created_at = models.DateTimeField()
+    match = models.ForeignKey('Match', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.api_id} - {self.match.api_id}"
+
+class TelemetryEvent(models.Model):
+    event_type = models.CharField(max_length=255)
+    timestamp = models.CharField(max_length=255)
+    description = models.CharField(max_length=255)
+    telemetry = models.ForeignKey('Telemetry', on_delete=models.CASCADE)
+    player =  models.ForeignKey('Player', on_delete=models.CASCADE, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.timestamp} - {self.event_type} - {self.description}"
+
+class ItemTypeLookup(models.Model):
+    name = models.CharField(max_length=255)
+    reference = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f"{self.name}"

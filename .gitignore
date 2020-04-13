@@ -6,3 +6,4 @@ tmp/
 temp/
 *.pyc
 */migrations/*.py
+logs/

@@ -22,7 +22,7 @@ KAKAO_SHARD = "shards/kakao/"
 TOURNAMENT_SHARD = "shards/tournament/"
 
 MAP_BINDING = {
-    "Baltic_Main": "Erangel (Remastered)",
+    "Baltic_Main": "Erangel",
     "Erangel_Main": "Erangel",
     "DihorOtok_Main": "Vikendi",
     "Desert_Main": "Miramar",

@@ -104,9 +104,10 @@ function loadResultsDataTable(){
 			{ width: '10%', data: "date_created", type: "date" },
 			{ width: '10%', data: "team_placement" },
 			{ width: '40%', data: "team_details" },
+			{ width: '10%', data: "actions" },
 		],
 		pageLength: 25,
-		order: [[ 3, "asc" ]],
+		order: [[ 3, "desc" ]],
 		processing: true,
 		language: {
 			processing: '<i class="fa fa-spinner fa-spin fa-fw"></i><span class="sr-only">Loading...</span> '

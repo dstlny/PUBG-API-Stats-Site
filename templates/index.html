@@ -2,6 +2,30 @@
 
 {% block body %}
 
+	<div class="card"  style='border-bottom: 0px'>
+		<div class='card-header' style="text-align: center">
+			Welcome!
+		</div>
+		<div class="card-body" style='padding-bottom:0'>
+			<br>
+			<form method="POST" action='/search' class="form-horizontal no-margin no-padding" style='margin-bottom: 0; padding-bottom: 0' id='search_form'>
+				{{ forms.search_field(name='player_name', value='', type='text', placeholder='Enter a Players Name', required='true') }}
+				{{ forms.select_field(name='platform', type='text', placeholder='', required='true', options=platform_selections) }}
+				{{ forms.select_field_two_one_line(name_one='perspective', type_one='text', placeholder_one='', required_one='true', options_one=perspective_selections, name_two='game_mode', type_two='text', placeholder_two='', required_two='true', options_two=gamemode_selections) }}
+				<input type="submit" style="display: none"/>
+			</form>
+			<input type="hidden" id="player_id" value="null">
+			<input type="hidden" id="player_name" value="null">
+			<input type="hidden" id="season_stats_endpoint" value="/retrieve_season_stats">
+			<input type="hidden" id="retrieve_matches" value="/retrieve_matches">
+		</div>
+	</div>
+	<div class="card" style='border-top: 0px;'>
+		<div class="card-body" id='messages'>
+
+		</div>
+	</div>
+
 	<br>
 	<div class="card accordion" id='seasons_container' style='border: 0px;'>
 			
@@ -30,7 +54,11 @@
 
 	<div class="card accordion" id='datatable_container'>
 		<div class="card-header">
-			<b>Please note:</b> this table will auto-reload with data as of when it becomes available
+			<b>Please note:</b>
+			<ol>
+				<li>This table will auto-reload with data as of when it becomes available.</li>
+				<li>Only matches from the last 14 days, will show here.</li>
+			</ol>
 		</div>
 		<div class="card-body">
 			<table class='table table-condensed hover' id='results_datatable'  style="width:100%">
@@ -42,6 +70,7 @@
 						<th width='15%'>Created</th>
 						<th width='18%'>Placement</th>
 						<th width='40%'>Details</th>
+						<th width='10%'>Actions</th>
 					</tr>
 				</thead>
 			</table>

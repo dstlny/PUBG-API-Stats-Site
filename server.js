@@ -22,6 +22,7 @@ fastify.register(require('./routes/search/search'))
 fastify.register(require('./routes/retrieve_season_stats/retrieve_season_stats'))
 fastify.register(require('./routes/retrieve_matches/retrieve_matches'))
 fastify.register(require('./routes/backend_status/backend_status'))
+fastify.register(require('./routes/match_detail/match_detail'))
 
 fastify.listen(7009, () => {
 	console.log(`NodeJS up and running on port ${7009}!`)

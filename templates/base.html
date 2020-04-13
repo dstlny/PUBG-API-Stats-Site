@@ -2,59 +2,35 @@
 
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>PUBG API Wrapper</title>
-        <!-- Required meta tags -->
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-        
-        <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-        <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
-        <link rel="stylesheet" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.min.css">
+	<head>
+		<title>PUBG API Wrapper</title>
+		<!-- Required meta tags -->
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+		
+		<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+		<link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+		<link rel="stylesheet" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.min.css">
 
-        <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
-        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
-        <script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
-        <script src="static/js/functions.js"></script>
+		<script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+		<script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+		<script src="static/js/functions.js"></script>
 
-        <nav class="navbar fixed-top navbar-dark nav-fill" style="background-color: #333!important; color:#fff;  position:relative; margin-bottom: 10px">
-            <a class="navbar-brand">
-                PUBG API Wrapper
-            </a>
-        </nav>
-    </head>
-    <body>
-        <div class="container" style='max-width: 1400px'>
-            <div class="col-md-12">
-                <div class="card"  style='border-bottom: 0px'>
-                    <div class='card-header' style="text-align: center">
-                        Welcome!
-                    </div>
-                    <div class="card-body" style='padding-bottom:0'>
-                        <br>
-                        <form method="POST" action='/search' class="form-horizontal no-margin no-padding" style='margin-bottom: 0; padding-bottom: 0' id='search_form'>
-                            {{ forms.search_field(name='player_name', value='', type='text', placeholder='Enter a Players Name', required='true') }}
-                            {{ forms.select_field(name='platform', type='text', placeholder='', required='true', options=platform_selections) }}
-                            {{ forms.select_field_two_one_line(name_one='perspective', type_one='text', placeholder_one='', required_one='true', options_one=perspective_selections, name_two='game_mode', type_two='text', placeholder_two='', required_two='true', options_two=gamemode_selections) }}
-                            <input type="submit" style="display: none"/>
-                        </form>
-                        <input type="hidden" id="player_id" value="null">
-                        <input type="hidden" id="player_name" value="null">
-                        <input type="hidden" id="season_stats_endpoint" value="/retrieve_season_stats">
-                        <input type="hidden" value="/retrieve_matches" id='retrieve_matches'>
-                    </div>
-                </div>
-                <div class="card" style='border-top: 0px;'>
-                    <div class="card-body" id='messages'>
-            
-                    </div>
-                </div>
-
-                {% block body %}
-                
-                {% endblock %}
-                <br>
-            </div>
-        </div>
-    </body>
+		<nav class="navbar fixed-top navbar-dark nav-fill" style="background-color: #333!important; color:#fff;  position:relative; margin-bottom: 10px">
+			<a class="navbar-brand">
+				PUBG API Wrapper
+			</a>
+		</nav>
+	</head>
+	<body>
+		<div class="container" style='max-width: 1400px'>
+			<div class="col-md-12">
+				{% block body %}
+				
+				{% endblock %}
+				<br>
+			</div>
+		</div>
+	</body>
 </html>
