@@ -563,7 +563,7 @@ def parse_match_telemetry(url, asset_id, telemetry_data, date_created, match, ac
 
 			if event_timestamp:
 				event_timestamp = parse(event_timestamp)
-
+				
 			if event_type == 'LogPlayerKill':
 
 				victim_name = log_event['victim']['name']
@@ -573,13 +573,24 @@ def parse_match_telemetry(url, asset_id, telemetry_data, date_created, match, ac
 					victim_name = 'You'
 					dead = True
 
-				killer_name = log_event['killer']['name']
-				killer_id = log_event['killer']['accountId']
-				
-				if killer_id == account_id:
-					killer_name = 'You'
-					match_kills += 1
-					dead = False
+				killer = log_event.get('killer')
+
+				if killer:
+
+					killer_name = log_event['killer']['name']
+					killer_id = log_event['killer']['accountId']
+					
+					if killer_id == account_id:
+						killer_name = 'You'
+						match_kills += 1
+						dead = False
+
+				else:
+
+					damage_type = log_event.get('damageTypeCategory')
+
+					if damage_type:
+						killer_name = log_event['damageTypeCategory']
 
 				kill_location = log_event['damageReason']
 				
@@ -592,10 +603,13 @@ def parse_match_telemetry(url, asset_id, telemetry_data, date_created, match, ac
 				kill_cause = get_object_or_404(ItemTypeLookup, reference=kill_cause)
 				kill_cause = kill_cause.name
 
-				if kill_location:
-					event_description = f'<b>{killer_name}</b> killed <b>{victim_name}</b> with a {kill_location} from a <b>{kill_cause}</b>'
+				if kill_cause in ['Redzone', 'Bluezone']:
+					event_description = f'<b>{victim_name}</b> died inside the <b>{kill_cause}</b>'
 				else:
-					event_description = f'<b>{killer_name}</b> killed <b>{victim_name}</b> with a <b>{kill_cause}</b>'
+					if kill_location:
+						event_description = f'<b>{killer_name}</b> killed <b>{victim_name}</b> with a {kill_location} from a <b>{kill_cause}</b>'
+					else:
+						event_description = f'<b>{killer_name}</b> killed <b>{victim_name}</b> with a <b>{kill_cause}</b>'
 
 				telemetry_event = TelemetryEvent(
 					event_type=event_type,

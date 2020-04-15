@@ -101,7 +101,7 @@ function loadResultsDataTable(){
 			{ width: '8%', data: "map" },
 			{ width: '8%', data: "mode" },
 			{ width: '8%', data: 'custom_match' },
-			{ width: '10%', data: "date_created", type: "date" },
+			{ width: '10%', data: "date_created", type: "datetime" },
 			{ width: '10%', data: "team_placement" },
 			{ width: '40%', data: "team_details" },
 			{ width: '10%', data: "actions" },

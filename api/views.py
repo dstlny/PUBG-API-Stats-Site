@@ -178,40 +178,39 @@ def retrieve_matches(request):
 
 			this_perspective = correct_perspective(perspective)
 			this_game_mode = correct_mode(game_mode)
-			
+
 			if this_game_mode and this_perspective:
 				mode_fiter = "{}-{}".format(this_game_mode, this_perspective)
-				kwargs['rosterparticipant__roster__match__mode__iexact'] = mode_fiter
-				message = "<strong>{roster_data_count}</strong> {} {} matches returned in ".format(this_game_mode.upper(), this_perspective)
+				kwargs['match__mode__iexact'] = mode_fiter
 			elif this_game_mode:
 				mode_fiter = this_game_mode
-				kwargs['rosterparticipant__roster__match__mode__icontains'] = mode_fiter
-				message = "<strong>{roster_data_count}</strong> TPP/FPP {} matches returned in ".format(this_game_mode.upper())
+				kwargs['match__mode__icontains'] = mode_fiter
 			elif this_perspective:
 				mode_fiter = this_perspective
-				kwargs['rosterparticipant__roster__match__mode__icontains'] = mode_fiter
-				message = "<strong>{roster_data_count}</strong> {} (SOLO, DUO, SQUAD) matches returned in ".format(this_perspective.upper())
-			else:
-				message = "<strong>{roster_data_count}</strong> TPP/FPP (SOLO, DUO, SQUAD) matches returned in "
-
+				kwargs['match__mode__icontains'] = mode_fiter
+			
 			fourteen_days_ago = timezone.now() - timedelta(days=14)
 
-			kwargs['rosterparticipant__roster__participants__player_name__in'] = player_names
-			kwargs['rosterparticipant__roster__match__api_id__icontains'] = player_id
-			kwargs['rosterparticipant__roster__match__created__gte'] = fourteen_days_ago
+			kwargs['participants__player_name__in'] = player_names
+			kwargs['match__api_id__icontains'] = player_id
+			kwargs['match__created__gte'] = fourteen_days_ago
 
-			roster_data = Roster.objects.filter(
-				**kwargs
-			).order_by('-match__created').distinct()
+			roster_data = Roster.objects.filter(**kwargs)\
+			.select_related('match')\
+			.prefetch_related('participants')\
+			.order_by('-match__created')\
+			.distinct()
 
-			message = "{}<strong>{}</strong>(s)".format(
-				message.format(
-					roster_data_count=roster_data.count()
-				),
-				"{0:.2f}".format(
-					time.time() - start_time
-				)
-			)
+			if game_mode and perspective:
+				message = "<strong>{}</strong> {} {} matches returned in ".format(roster_data.count(), game_mode.upper(), perspective)
+			elif game_mode:
+				message = "<strong>{}</strong> TPP/FPP {} matches returned in ".format(roster_data.count(), game_mode.upper())
+			elif perspective:
+				message = "<strong>{}</strong> {} (SOLO, DUO, SQUAD) matches returned in ".format(roster_data.count(), perspective.upper())
+			else:
+				message = "<strong>{}</strong> TPP/FPP (SOLO, DUO, SQUAD) matches returned in ".format(roster_data.count())
+
+			message = "{}<strong>{}</strong>(s)".format(message, "{0:.2f}".format(time.time() - start_time))
 
 			test_data = {
 				'perspective': perspective,
@@ -222,7 +221,7 @@ def retrieve_matches(request):
 						'map': roster.match.map.name if roster.match.map else None,
 						'mode': roster.match.mode.upper(),
 						'custom_match': 'Yes' if roster.match.is_custom_match else 'No',
-						'date_created': datetime.strftime(roster.match.created, '%d/%m/%Y %H:%M'),
+						'date_created': datetime.strftime(roster.match.created, '%d/%m/%Y %H:%M:%S'),
 						'team_details': ''.join([f"{x.player_name}: {x.kills} kill(s) | {x.damage} damage<br>" for x in roster.participants.all()]),
 						'team_placement': roster.placement,
 						'actions': f'<a href="/match_detail/{roster.match.api_id}/" class="btn btn-link btn-sm active" role="button">View Match</a>'
@@ -258,21 +257,25 @@ def retrieve_matches(request):
 
 			if game_mode and perspective:
 				mode_fiter = "{}-{}".format(game_mode, perspective)
-				kwargs['rosterparticipant__roster__match__mode__iexact'] = mode_fiter
+				kwargs['match__mode__iexact'] = mode_fiter
 			elif game_mode:
 				mode_fiter = game_mode
-				kwargs['rosterparticipant__roster__match__mode__icontains'] = mode_fiter
+				kwargs['match__mode__icontains'] = mode_fiter
 			elif perspective:
 				mode_fiter = perspective
-				kwargs['rosterparticipant__roster__match__mode__icontains'] = mode_fiter
+				kwargs['match__mode__icontains'] = mode_fiter
 
 			fourteen_days_ago = timezone.now() - timedelta(days=14)
 
-			kwargs['rosterparticipant__roster__participants__player_name__in'] = player_names
-			kwargs['rosterparticipant__roster__match__api_id__icontains'] = player_id
-			kwargs['rosterparticipant__roster__match__created__gte'] = fourteen_days_ago
+			kwargs['participants__player_name__in'] = player_names
+			kwargs['match__api_id__icontains'] = player_id
+			kwargs['match__created__gte'] = fourteen_days_ago
 
-			roster_data = Roster.objects.filter(**kwargs).order_by('-match__created').distinct()
+			roster_data = Roster.objects.filter(**kwargs)\
+			.select_related('match')\
+			.prefetch_related('participants')\
+			.distinct()\
+			.order_by('-match__created')
 
 			if roster_data and roster_data.exists():
 
@@ -296,7 +299,7 @@ def retrieve_matches(request):
 							'map': roster.match.map.name if roster.match.map else None,
 							'mode': roster.match.mode.upper(),
 							'custom_match': 'Yes' if roster.match.is_custom_match else 'No',
-							'date_created': datetime.strftime(roster.match.created, '%d/%m/%Y %H:%M'),
+							'date_created': datetime.strftime(roster.match.created, '%d/%m/%Y %H:%M:%S'),
 							'team_details': ''.join([f"{x.player_name}: {x.kills} kill(s) | {x.damage} damage<br>" for x in roster.participants.all()]),
 							'team_placement': roster.placement,
 							'actions': f'<a href="/match_detail/{roster.match.api_id}/" class="btn btn-link btn-sm active" role="button">View Match</a>'
@@ -386,28 +389,22 @@ def retrieve_season_stats(request):
 			**kwargs
 		).exclude(**exclude)
 
-		ajax_data = []
-
-		for x in season_stats:
-			this_dict = {}
-
-			mode = x.mode.lower().replace('-', '_')
-			season_stat_key = '{}_season_stats'.format(mode)
-
-			this_dict[season_stat_key] = {
-				'{}_season_stats'.format(mode): correct_mode(mode.replace('_', ' ').upper()),
-				'{}_season_matches'.format(mode): "{} {}".format(x.rounds_played, 'Matches Played'),
-				'{}_season_kills__text'.format(mode): 'Kills',
-				'{}_season_kills__figure'.format(mode): x.kills,
-				'{}_season_damage__text'.format(mode): 'Damage Dealt',
-				'{}_season_damage__figure'.format(mode): str(x.damage_dealt),
-				'{}_season_longest_kill__text'.format(mode): 'Longest Kill',
-				'{}_season_longest_kill__figure'.format(mode): str(x.longest_kill),
-				'{}_season_headshots__text'.format(mode): 'Headshot kills',
-				'{}_season_headshots__figure'.format(mode): x.headshot_kills
-			}
-
-			ajax_data.append(this_dict)
+		ajax_data = [
+			{
+				f"{x.mode.lower().replace('-', '_')}_season_stats":{
+					f"{x.mode.lower().replace('-', '_')}_season_stats": correct_mode(x.mode.replace('_', ' ').upper()),
+					f"{x.mode.lower().replace('-', '_')}_season_matches": "{} {}".format(x.rounds_played, 'Matches Played'),
+					f"{x.mode.lower().replace('-', '_')}_season_kills__text": 'Kills',
+					f"{x.mode.lower().replace('-', '_')}_season_kills__figure": x.kills,
+					f"{x.mode.lower().replace('-', '_')}_season_damage__text": 'Damage Dealt',
+					f"{x.mode.lower().replace('-', '_')}_season_damage__figure": str(x.damage_dealt),
+					f"{x.mode.lower().replace('-', '_')}_season_longest_kill__text": 'Longest Kill',
+					f"{x.mode.lower().replace('-', '_')}_season_longest_kill__figure": str(x.longest_kill),
+					f"{x.mode.lower().replace('-', '_')}_season_headshots__text": 'Headshot kills',
+					f"{x.mode.lower().replace('-', '_')}_season_headshots__figure": x.headshot_kills
+				}
+			} for x in season_stats
+		]
 
 		cache.set(player_cache_key, ajax_data, 60*20)
 
@@ -420,7 +417,8 @@ def retrieve_season_stats(request):
 @api_view(['GET'])
 def match_detail(request, match_id):
 
-	match_exists =  Match.objects.filter(api_id__iexact=match_id)
+	matches = Match.objects.only('api_id')
+	match_exists =  matches.filter(api_id__iexact=match_id)
 
 	split = match_id.split('_')
 	account_id = split[0]
@@ -433,7 +431,6 @@ def match_detail(request, match_id):
 		if not match_url or match_id not in match_url:
 			current_player = get_object_or_404(Player, api_id=account_id)
 			platform_url = current_player.platform_url
-
 			match_url = build_match_url(platform_url, match_id)
 
 		match_json = make_request(match_url)
@@ -450,44 +447,55 @@ def match_detail(request, match_id):
 		total_match_kills = get_object_or_404(telemetry_events, event_type__iexact='LogTotalMatchKills')
 		log_match_end = get_object_or_404(telemetry_events, event_type__iexact='LogMatchEnd')
 
-		log_match_start_timestamp = parse(log_match_start.timestamp).time()
+		log_match_start_timestamp = parse(log_match_start.timestamp)
+		log_match_start_timestamp = str(log_match_start_timestamp)
+		
+		if '+' in log_match_start_timestamp:
+			log_match_start_timestamp = str(log_match_start_timestamp).split('+')[0]
+
 		log_match_start_timestamp = str(log_match_start_timestamp).split('.')[0]
-		log_match_end_timestamp = parse(log_match_end.timestamp).time()
+		log_match_end_timestamp = parse(log_match_end.timestamp)
+
+		log_match_end_timestamp = str(log_match_end_timestamp)
+		
+		if '+' in log_match_end_timestamp:
+			log_match_end_timestamp = str(log_match_end_timestamp).split('+')[0]
+
 		log_match_end_timestamp = str(log_match_end_timestamp).split('.')[0]
 
-		FMT = '%H:%M:%S'
+		FMT = '%Y-%m-%d %H:%M:%S'
 
 		telemetry_events = telemetry_events.exclude(event_type__iexact='LogTotalMatchKills')
+		
 
 		elapased_time = datetime.strptime(log_match_end_timestamp, FMT) - datetime.strptime(log_match_start_timestamp, FMT)
+
 		heals_used = telemetry_events.filter(event_type__iexact='LogItemUse').count()
 
 		match_roster = get_object_or_404(Roster, match=match)
 
 		telemetry_data = {
-			'player_kills': total_match_kills.description,
-			'match_id': log_match_start.telemetry.match.api_id.split('_')[1],
-			'match_elapsed_time': f'{elapased_time} minutes',
-			'match_map_name': log_match_start.telemetry.match.map.name,
-			'match_heals_used': heals_used,
-			'team_details': [
-				{
-					'player_name': x.player_name,
-					'kills': x.kills,
-					'damage': x.damage
-				} for x in match_roster.participants.all() if match_roster
-			],
-			'events':[
-				{
-					'timestamp': datetime.strftime(parse(x.timestamp), '%H:%M'),
-					'event': x.description
-				} for x in telemetry_events			
-			]
+			'telemetry_data':{
+				'player_kills': total_match_kills.description,
+				'match_id': log_match_start.telemetry.match.api_id.split('_')[1],
+				'match_elapsed_time': f'{elapased_time} minutes',
+				'match_map_name': log_match_start.telemetry.match.map.name,
+				'match_heals_used': heals_used,
+				'team_details': [
+					{
+						'player_name': x.player_name,
+						'kills': x.kills,
+						'damage': x.damage
+					} for x in match_roster.participants.all() if match_roster
+				],
+				'events':[
+					{
+						'timestamp': datetime.strftime(parse(x.timestamp), '%H:%M:%S'),
+						'event': x.description
+					} for x in telemetry_events			
+				]
+			}
 		}
 
-		ajax_data = {
-			'telemetry_data': telemetry_data
-		}
-
-		return Response(ajax_data)
+		return Response(telemetry_data)
 		
