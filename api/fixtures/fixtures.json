@@ -1,0 +1,2985 @@
+[
+{
+     "model": "api.map",
+     "pk": 1,
+     "fields": {
+          "name": "Erangel",
+          "reference": "Baltic_Main",
+          "image_url": "https://raw.githubusercontent.com/pubg/api-assets/master/Assets/Maps/Erangel_Remastered_Main_No_Text_Low_Res.png"
+     }
+},
+{
+     "model": "api.map",
+     "pk": 2,
+     "fields": {
+          "name": "Karakin",
+          "reference": "Summerland_Main",
+          "image_url": "https://raw.githubusercontent.com/pubg/api-assets/master/Assets/Maps/Karakin_Main_No_Text_Low_Res.png"
+     }
+},
+{
+     "model": "api.map",
+     "pk": 3,
+     "fields": {
+          "name": "Sanhok",
+          "reference": "Savage_Main",
+          "image_url": "https://raw.githubusercontent.com/pubg/api-assets/master/Assets/Maps/Sanhok_Main_No_Text_Low_Res.png"
+     }
+},
+{
+     "model": "api.map",
+     "pk": 4,
+     "fields": {
+          "name": "Miramar",
+          "reference": "Desert_Main",
+          "image_url": "https://raw.githubusercontent.com/pubg/api-assets/master/Assets/Maps/Miramar_Main_No_Text_Low_Res.png"
+     }
+},
+{
+     "model": "api.map",
+     "pk": 5,
+     "fields": {
+          "name": "Camp Jackal",
+          "reference": "Range_Main",
+          "image_url": "https://raw.githubusercontent.com/pubg/api-assets/master/Assets/Maps/Camp_Jackal_Main_No_Text_Low_Res.png"
+     }
+},
+{
+     "model": "api.map",
+     "pk": 6,
+     "fields": {
+          "name": "Vikendi",
+          "reference": "DihorOtok_Main",
+          "image_url": "https://raw.githubusercontent.com/pubg/api-assets/master/Assets/Maps/Vikendi_Main_No_Text_Low_Res.png"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 73,
+     "fields": {
+          "api_id": "division.bro.official.2017-beta",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/steam/seasons",
+          "platform": "steam"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 74,
+     "fields": {
+          "api_id": "division.bro.official.2017-pre1",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/steam/seasons",
+          "platform": "steam"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 75,
+     "fields": {
+          "api_id": "division.bro.official.2017-pre2",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/steam/seasons",
+          "platform": "steam"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 76,
+     "fields": {
+          "api_id": "division.bro.official.2017-pre3",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/steam/seasons",
+          "platform": "steam"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 77,
+     "fields": {
+          "api_id": "division.bro.official.2017-pre4",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/steam/seasons",
+          "platform": "steam"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 78,
+     "fields": {
+          "api_id": "division.bro.official.2017-pre5",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/steam/seasons",
+          "platform": "steam"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 79,
+     "fields": {
+          "api_id": "division.bro.official.2017-pre6",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/steam/seasons",
+          "platform": "steam"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 80,
+     "fields": {
+          "api_id": "division.bro.official.2017-pre7",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/steam/seasons",
+          "platform": "steam"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 81,
+     "fields": {
+          "api_id": "division.bro.official.2017-pre8",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/steam/seasons",
+          "platform": "steam"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 82,
+     "fields": {
+          "api_id": "division.bro.official.2017-pre9",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/steam/seasons",
+          "platform": "steam"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 83,
+     "fields": {
+          "api_id": "division.bro.official.2018-01",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/steam/seasons",
+          "platform": "steam"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 84,
+     "fields": {
+          "api_id": "division.bro.official.2018-02",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/steam/seasons",
+          "platform": "steam"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 85,
+     "fields": {
+          "api_id": "division.bro.official.2018-03",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/steam/seasons",
+          "platform": "steam"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 86,
+     "fields": {
+          "api_id": "division.bro.official.2018-04",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/steam/seasons",
+          "platform": "steam"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 87,
+     "fields": {
+          "api_id": "division.bro.official.2018-05",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/steam/seasons",
+          "platform": "steam"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 88,
+     "fields": {
+          "api_id": "division.bro.official.2018-06",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/steam/seasons",
+          "platform": "steam"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 89,
+     "fields": {
+          "api_id": "division.bro.official.2018-07",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/steam/seasons",
+          "platform": "steam"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 90,
+     "fields": {
+          "api_id": "division.bro.official.2018-08",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/steam/seasons",
+          "platform": "steam"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 91,
+     "fields": {
+          "api_id": "division.bro.official.2018-09",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/steam/seasons",
+          "platform": "steam"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 92,
+     "fields": {
+          "api_id": "division.bro.official.pc-2018-01",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/steam/seasons",
+          "platform": "steam"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 93,
+     "fields": {
+          "api_id": "division.bro.official.pc-2018-02",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/steam/seasons",
+          "platform": "steam"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 94,
+     "fields": {
+          "api_id": "division.bro.official.pc-2018-03",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/steam/seasons",
+          "platform": "steam"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 95,
+     "fields": {
+          "api_id": "division.bro.official.pc-2018-04",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/steam/seasons",
+          "platform": "steam"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 96,
+     "fields": {
+          "api_id": "division.bro.official.pc-2018-05",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/steam/seasons",
+          "platform": "steam"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 97,
+     "fields": {
+          "api_id": "division.bro.official.pc-2018-06",
+          "is_current": 1,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/steam/seasons",
+          "platform": "steam"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 98,
+     "fields": {
+          "api_id": "division.bro.official.2018-05",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/xbox/seasons",
+          "platform": "xbox"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 99,
+     "fields": {
+          "api_id": "division.bro.official.2018-06",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/xbox/seasons",
+          "platform": "xbox"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 100,
+     "fields": {
+          "api_id": "division.bro.official.2018-07",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/xbox/seasons",
+          "platform": "xbox"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 101,
+     "fields": {
+          "api_id": "division.bro.official.2018-08",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/xbox/seasons",
+          "platform": "xbox"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 102,
+     "fields": {
+          "api_id": "division.bro.official.xbox-01",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/xbox/seasons",
+          "platform": "xbox"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 103,
+     "fields": {
+          "api_id": "division.bro.official.xbox-02",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/xbox/seasons",
+          "platform": "xbox"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 104,
+     "fields": {
+          "api_id": "division.bro.official.console-03",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/xbox/seasons",
+          "platform": "xbox"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 105,
+     "fields": {
+          "api_id": "division.bro.official.console-04",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/xbox/seasons",
+          "platform": "xbox"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 106,
+     "fields": {
+          "api_id": "division.bro.official.console-05",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/xbox/seasons",
+          "platform": "xbox"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 107,
+     "fields": {
+          "api_id": "division.bro.official.console-06",
+          "is_current": 1,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/xbox/seasons",
+          "platform": "xbox"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 108,
+     "fields": {
+          "api_id": "division.bro.official.xb-pre1",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/xbox/seasons",
+          "platform": "xbox"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 109,
+     "fields": {
+          "api_id": "division.bro.official.2018-09",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/psn/seasons",
+          "platform": "psn"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 110,
+     "fields": {
+          "api_id": "division.bro.official.playstation-01",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/psn/seasons",
+          "platform": "psn"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 111,
+     "fields": {
+          "api_id": "division.bro.official.playstation-02",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/psn/seasons",
+          "platform": "psn"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 112,
+     "fields": {
+          "api_id": "division.bro.official.console-03",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/psn/seasons",
+          "platform": "psn"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 113,
+     "fields": {
+          "api_id": "division.bro.official.console-04",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/psn/seasons",
+          "platform": "psn"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 114,
+     "fields": {
+          "api_id": "division.bro.official.console-05",
+          "is_current": 0,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/psn/seasons",
+          "platform": "psn"
+     }
+},
+{
+     "model": "api.season",
+     "pk": 115,
+     "fields": {
+          "api_id": "division.bro.official.console-06",
+          "is_current": 1,
+          "is_off_season": 0,
+          "api_url": "https://api.pubg.com/shards/psn/seasons",
+          "platform": "psn"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 1,
+     "fields": {
+          "name": "Aquarail",
+          "reference": "AquaRail_A_01_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 2,
+     "fields": {
+          "name": "Aquarail",
+          "reference": "AquaRail_A_02_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 3,
+     "fields": {
+          "name": "Aquarail",
+          "reference": "AquaRail_A_03_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 4,
+     "fields": {
+          "name": "Bluezone",
+          "reference": "BattleRoyaleModeController_Def_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 5,
+     "fields": {
+          "name": "Bluezone",
+          "reference": "BattleRoyaleModeController_Desert_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 6,
+     "fields": {
+          "name": "Bluezone",
+          "reference": "BattleRoyaleModeController_DihorOtok_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 7,
+     "fields": {
+          "name": "Bluezone",
+          "reference": "BattleRoyaleModeController_Savage_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 8,
+     "fields": {
+          "name": "Bluezone",
+          "reference": "BattleRoyaleModeController_Summerland_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 9,
+     "fields": {
+          "name": "Blackzone",
+          "reference": "BlackZoneController_Def_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 10,
+     "fields": {
+          "name": "PG-117",
+          "reference": "Boat_PG117_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 11,
+     "fields": {
+          "name": "BRDM-2",
+          "reference": "BP_BRDM_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 12,
+     "fields": {
+          "name": "Molotov Fire",
+          "reference": "BP_FireEffectController_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 13,
+     "fields": {
+          "name": "Rony",
+          "reference": "BP_M_Rony_A_01_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 14,
+     "fields": {
+          "name": "Rony",
+          "reference": "BP_M_Rony_A_02_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 15,
+     "fields": {
+          "name": "Rony",
+          "reference": "BP_M_Rony_A_03_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 16,
+     "fields": {
+          "name": "Mirado",
+          "reference": "BP_Mirado_A_02_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 17,
+     "fields": {
+          "name": "Mirado",
+          "reference": "BP_Mirado_A_03_Esports_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 18,
+     "fields": {
+          "name": "Mirado (open top)",
+          "reference": "BP_Mirado_Open_03_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 19,
+     "fields": {
+          "name": "Mirado (open top)",
+          "reference": "BP_Mirado_Open_04_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 20,
+     "fields": {
+          "name": "Molotov Fire Damage",
+          "reference": "BP_MolotovFireDebuff_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 21,
+     "fields": {
+          "name": "Motorcycle",
+          "reference": "BP_Motorbike_04_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 22,
+     "fields": {
+          "name": "Motorcycle",
+          "reference": "BP_Motorbike_04_Desert_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 23,
+     "fields": {
+          "name": "Motorcycle (w/ Sidecar)",
+          "reference": "BP_Motorbike_04_SideCar_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 24,
+     "fields": {
+          "name": "Motorcycle (w/ Sidecar)",
+          "reference": "BP_Motorbike_04_SideCar_Desert_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 25,
+     "fields": {
+          "name": "Motor Glider",
+          "reference": "BP_Motorglider_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 26,
+     "fields": {
+          "name": "Zima",
+          "reference": "BP_Niva_01_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 27,
+     "fields": {
+          "name": "Zima",
+          "reference": "BP_Niva_02_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 28,
+     "fields": {
+          "name": "Zima",
+          "reference": "BP_Niva_03_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 29,
+     "fields": {
+          "name": "Zima",
+          "reference": "BP_Niva_04_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 30,
+     "fields": {
+          "name": "Pickup Truck (closed top)",
+          "reference": "BP_PickupTruck_A_01_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 31,
+     "fields": {
+          "name": "Pickup Truck (closed top)",
+          "reference": "BP_PickupTruck_A_02_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 32,
+     "fields": {
+          "name": "Pickup Truck (closed top)",
+          "reference": "BP_PickupTruck_A_03_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 33,
+     "fields": {
+          "name": "Pickup Truck (closed top)",
+          "reference": "BP_PickupTruck_A_04_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 34,
+     "fields": {
+          "name": "Pickup Truck (closed top)",
+          "reference": "BP_PickupTruck_A_05_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 35,
+     "fields": {
+          "name": "Pickup Truck (closed top)",
+          "reference": "BP_PickupTruck_A_esports_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 36,
+     "fields": {
+          "name": "Pickup Truck (open top)",
+          "reference": "BP_PickupTruck_B_01_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 37,
+     "fields": {
+          "name": "Pickup Truck (open top)",
+          "reference": "BP_PickupTruck_B_02_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 38,
+     "fields": {
+          "name": "Pickup Truck (open top)",
+          "reference": "BP_PickupTruck_B_03_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 39,
+     "fields": {
+          "name": "Pickup Truck (open top)",
+          "reference": "BP_PickupTruck_B_04_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 40,
+     "fields": {
+          "name": "Pickup Truck (open top)",
+          "reference": "BP_PickupTruck_B_05_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 41,
+     "fields": {
+          "name": "Scooter",
+          "reference": "BP_Scooter_01_A_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 42,
+     "fields": {
+          "name": "Scooter",
+          "reference": "BP_Scooter_02_A_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 43,
+     "fields": {
+          "name": "Scooter",
+          "reference": "BP_Scooter_03_A_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 44,
+     "fields": {
+          "name": "Scooter",
+          "reference": "BP_Scooter_04_A_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 45,
+     "fields": {
+          "name": "Snowbike",
+          "reference": "BP_Snowbike_01_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 46,
+     "fields": {
+          "name": "Snowbike",
+          "reference": "BP_Snowbike_02_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 47,
+     "fields": {
+          "name": "Snowmobile",
+          "reference": "BP_Snowmobile_01_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 48,
+     "fields": {
+          "name": "Snowmobile",
+          "reference": "BP_Snowmobile_02_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 49,
+     "fields": {
+          "name": "Snowmobile",
+          "reference": "BP_Snowmobile_03_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 50,
+     "fields": {
+          "name": "Spike Trap",
+          "reference": "BP_Spiketrap_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 51,
+     "fields": {
+          "name": "Tukshai",
+          "reference": "BP_TukTukTuk_A_01_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 52,
+     "fields": {
+          "name": "Tukshai",
+          "reference": "BP_TukTukTuk_A_02_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 53,
+     "fields": {
+          "name": "Tukshai",
+          "reference": "BP_TukTukTuk_A_03_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 54,
+     "fields": {
+          "name": "Van",
+          "reference": "BP_Van_A_01_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 55,
+     "fields": {
+          "name": "Van",
+          "reference": "BP_Van_A_02_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 56,
+     "fields": {
+          "name": "Van",
+          "reference": "BP_Van_A_03_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 57,
+     "fields": {
+          "name": "Drowning",
+          "reference": "Buff_DecreaseBreathInApnea_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 58,
+     "fields": {
+          "name": "Buggy",
+          "reference": "Buggy_A_01_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 59,
+     "fields": {
+          "name": "Buggy",
+          "reference": "Buggy_A_02_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 60,
+     "fields": {
+          "name": "Buggy",
+          "reference": "Buggy_A_03_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 61,
+     "fields": {
+          "name": "Buggy",
+          "reference": "Buggy_A_04_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 62,
+     "fields": {
+          "name": "Buggy",
+          "reference": "Buggy_A_05_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 63,
+     "fields": {
+          "name": "Buggy",
+          "reference": "Buggy_A_06_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 64,
+     "fields": {
+          "name": "Dacia",
+          "reference": "Dacia_A_01_v2_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 65,
+     "fields": {
+          "name": "Dacia",
+          "reference": "Dacia_A_01_v2_snow_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 66,
+     "fields": {
+          "name": "Dacia",
+          "reference": "Dacia_A_02_v2_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 67,
+     "fields": {
+          "name": "Dacia",
+          "reference": "Dacia_A_03_v2_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 68,
+     "fields": {
+          "name": "Dacia",
+          "reference": "Dacia_A_03_v2_Esports_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 69,
+     "fields": {
+          "name": "Dacia",
+          "reference": "Dacia_A_04_v2_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 70,
+     "fields": {
+          "name": "Jerrycan",
+          "reference": "Jerrycan"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 72,
+     "fields": {
+          "name": "Panzerfaust Projectile",
+          "reference": "PanzerFaust100M_Projectile_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 73,
+     "fields": {
+          "name": "PG-117",
+          "reference": "PG117_A_01_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 74,
+     "fields": {
+          "name": "Punch",
+          "reference": "PlayerFemale_A_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 75,
+     "fields": {
+          "name": "Punch",
+          "reference": "PlayerMale_A_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 76,
+     "fields": {
+          "name": "Frag Grenade",
+          "reference": "ProjGrenade_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 77,
+     "fields": {
+          "name": "Molotov Cocktail",
+          "reference": "ProjMolotov_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 78,
+     "fields": {
+          "name": "Molotov Cocktail Fire Field",
+          "reference": "ProjMolotov_DamageField_Direct_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 79,
+     "fields": {
+          "name": "Sticky Bomb",
+          "reference": "ProjStickyGrenade_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 80,
+     "fields": {
+          "name": "Redzone",
+          "reference": "RedZoneBomb_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 81,
+     "fields": {
+          "name": "Redzone",
+          "reference": "RedZoneBombingField"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 82,
+     "fields": {
+          "name": "Destructible Surface",
+          "reference": "TslDestructibleSurfaceManager"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 83,
+     "fields": {
+          "name": "UAZ (open top)",
+          "reference": "Uaz_A_01_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 84,
+     "fields": {
+          "name": "UAZ (armored)",
+          "reference": "Uaz_Armored_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 85,
+     "fields": {
+          "name": "UAZ (soft top)",
+          "reference": "Uaz_B_01_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 86,
+     "fields": {
+          "name": "UAZ (soft top)",
+          "reference": "Uaz_B_01_esports_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 87,
+     "fields": {
+          "name": "UAZ (hard top)",
+          "reference": "Uaz_C_01_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 88,
+     "fields": {
+          "name": "AKM",
+          "reference": "WeapAK47_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 89,
+     "fields": {
+          "name": "AUG A3",
+          "reference": "WeapAUG_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 90,
+     "fields": {
+          "name": "AWM",
+          "reference": "WeapAWM_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 91,
+     "fields": {
+          "name": "S686",
+          "reference": "WeapBerreta686_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 92,
+     "fields": {
+          "name": "Beryl",
+          "reference": "WeapBerylM762_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 93,
+     "fields": {
+          "name": "Bizon",
+          "reference": "WeapBizonPP19_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 94,
+     "fields": {
+          "name": "Crowbar",
+          "reference": "WeapCowbar_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 95,
+     "fields": {
+          "name": "Crowbar Projectile",
+          "reference": "WeapCowbarProjectile_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 96,
+     "fields": {
+          "name": "Crossbow",
+          "reference": "WeapCrossbow_1_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 97,
+     "fields": {
+          "name": "Deagle",
+          "reference": "WeapDesertEagle_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 98,
+     "fields": {
+          "name": "DBS",
+          "reference": "WeapDP12_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 99,
+     "fields": {
+          "name": "DP-28",
+          "reference": "WeapDP28_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 100,
+     "fields": {
+          "name": "SLR",
+          "reference": "WeapFNFal_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 101,
+     "fields": {
+          "name": "P18C",
+          "reference": "WeapG18_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 102,
+     "fields": {
+          "name": "G36C",
+          "reference": "WeapG36C_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 103,
+     "fields": {
+          "name": "Groza",
+          "reference": "WeapGroza_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 104,
+     "fields": {
+          "name": "M416",
+          "reference": "WeapHK416_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 105,
+     "fields": {
+          "name": "Kar98k",
+          "reference": "WeapKar98k_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 106,
+     "fields": {
+          "name": "M16A4",
+          "reference": "WeapM16A4_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 107,
+     "fields": {
+          "name": "P1911",
+          "reference": "WeapM1911_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 108,
+     "fields": {
+          "name": "M249",
+          "reference": "WeapM249_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 109,
+     "fields": {
+          "name": "M24",
+          "reference": "WeapM24_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 110,
+     "fields": {
+          "name": "P92",
+          "reference": "WeapM9_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 111,
+     "fields": {
+          "name": "Machete",
+          "reference": "WeapMachete_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 112,
+     "fields": {
+          "name": "Machete Projectile",
+          "reference": "WeapMacheteProjectile_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 113,
+     "fields": {
+          "name": "Mini 14",
+          "reference": "WeapMini14_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 114,
+     "fields": {
+          "name": "Mk14 EBR",
+          "reference": "WeapMk14_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 115,
+     "fields": {
+          "name": "Mk47 Mutant",
+          "reference": "WeapMk47Mutant_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 116,
+     "fields": {
+          "name": "MP5K",
+          "reference": "WeapMP5K_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 117,
+     "fields": {
+          "name": "R1895",
+          "reference": "WeapNagantM1895_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 118,
+     "fields": {
+          "name": "Pan",
+          "reference": "WeapPan_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 119,
+     "fields": {
+          "name": "Pan Projectile",
+          "reference": "WeapPanProjectile_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 120,
+     "fields": {
+          "name": "Panzerfaust",
+          "reference": "WeapPanzerFaust100M1_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 121,
+     "fields": {
+          "name": "QBU88",
+          "reference": "WeapQBU88_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 122,
+     "fields": {
+          "name": "QBZ95",
+          "reference": "WeapQBZ95_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 123,
+     "fields": {
+          "name": "R45",
+          "reference": "WeapRhino_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 124,
+     "fields": {
+          "name": "S12K",
+          "reference": "WeapSaiga12_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 125,
+     "fields": {
+          "name": "Sawed-off",
+          "reference": "WeapSawnoff_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 126,
+     "fields": {
+          "name": "SCAR-L",
+          "reference": "WeapSCAR-L_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 127,
+     "fields": {
+          "name": "Sickle",
+          "reference": "WeapSickle_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 128,
+     "fields": {
+          "name": "Sickle Projectile",
+          "reference": "WeapSickleProjectile_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 129,
+     "fields": {
+          "name": "SKS",
+          "reference": "WeapSKS_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 130,
+     "fields": {
+          "name": "Tommy Gun",
+          "reference": "WeapThompson_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 131,
+     "fields": {
+          "name": "UMP9",
+          "reference": "WeapUMP_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 132,
+     "fields": {
+          "name": "Micro Uzi",
+          "reference": "WeapUZI_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 133,
+     "fields": {
+          "name": "Vector",
+          "reference": "WeapVector_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 134,
+     "fields": {
+          "name": "VSS",
+          "reference": "WeapVSS_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 135,
+     "fields": {
+          "name": "Skorpion",
+          "reference": "Weapvz61Skorpion_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 136,
+     "fields": {
+          "name": "Win94",
+          "reference": "WeapWin94_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 137,
+     "fields": {
+          "name": "S1897",
+          "reference": "WeapWinchester_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 138,
+     "fields": {
+          "name": "Bluezone Damage",
+          "reference": "Damage_BlueZone"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 139,
+     "fields": {
+          "name": "Drowning Damage",
+          "reference": "Damage_Drown"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 140,
+     "fields": {
+          "name": "Blackzone Damage",
+          "reference": "Damage_Explosion_BlackZone"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 141,
+     "fields": {
+          "name": "Breach Explosion Damage",
+          "reference": "Damage_Explosion_Breach"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 142,
+     "fields": {
+          "name": "Jerrycan Explosion Damage",
+          "reference": "Damage_Explosion_JerryCan"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 143,
+     "fields": {
+          "name": "Grenade Explosion Damage",
+          "reference": "Damage_Explosion_Grenade"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 144,
+     "fields": {
+          "name": "Panzerfaust Backblast Damage",
+          "reference": "Damage_Explosion_PanzerFaustBackBlast"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 145,
+     "fields": {
+          "name": "Panzerfaust Explosion Damage",
+          "reference": "Damage_Explosion_PanzerFaustWarhead"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 146,
+     "fields": {
+          "name": "Redzone Explosion Damage",
+          "reference": "Damage_Explosion_RedZone"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 147,
+     "fields": {
+          "name": "Sticky Bomb Explosion Damage",
+          "reference": "Damage_Explosion_StickyBomb"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 148,
+     "fields": {
+          "name": "Vehicle Explosion Damage",
+          "reference": "Damage_Explosion_Vehicle"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 149,
+     "fields": {
+          "name": "Bleed out damage",
+          "reference": "Damage_Groggy"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 150,
+     "fields": {
+          "name": "Gun Damage",
+          "reference": "Damage_Gun"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 151,
+     "fields": {
+          "name": "Fall Damage",
+          "reference": "Damage_Instant_Fall"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 152,
+     "fields": {
+          "name": "Melee Damage",
+          "reference": "Damage_Melee"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 153,
+     "fields": {
+          "name": "Melee Throw Damage",
+          "reference": "Damage_MeleeThrow"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 154,
+     "fields": {
+          "name": "Molotov Damage",
+          "reference": "Damage_Molotov"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 155,
+     "fields": {
+          "name": "Punch Damage",
+          "reference": "Damage_Punch"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 156,
+     "fields": {
+          "name": "Vehicle Crash Damage",
+          "reference": "Damage_VehicleCrashHit"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 157,
+     "fields": {
+          "name": "Vehicle Damage",
+          "reference": "Damage_VehicleHit"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 158,
+     "fields": {
+          "name": "Spike Trap damage",
+          "reference": "SpikeTrap"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 159,
+     "fields": {
+          "name": "Dacia 1300",
+          "reference": "Dacia_A_01_v2_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 160,
+     "fields": {
+          "name": "Dacia 1300",
+          "reference": "Dacia_A_01_v2_snow_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 161,
+     "fields": {
+          "name": "Dacia 1300",
+          "reference": "Dacia_A_02_v2_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 162,
+     "fields": {
+          "name": "Dacia 1300",
+          "reference": "Dacia_A_03_v2_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 163,
+     "fields": {
+          "name": "Dacia 1300",
+          "reference": "Dacia_A_03_v2_Esports_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 164,
+     "fields": {
+          "name": "Dacia 1300",
+          "reference": "Dacia_A_04_v2_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 165,
+     "fields": {
+          "name": "C-130",
+          "reference": "DummyTransportAircraft_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 166,
+     "fields": {
+          "name": "Parachute",
+          "reference": "ParachutePlayer_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 167,
+     "fields": {
+          "name": "Parachute",
+          "reference": "ParachutePlayer_Warmode_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 168,
+     "fields": {
+          "name": "C-130",
+          "reference": "WarModeTransportAircraft_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 169,
+     "fields": {
+          "name": "12 Gauge Ammo",
+          "reference": "Item_Ammo_12Guage_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 170,
+     "fields": {
+          "name": "300 Magnum Ammo",
+          "reference": "Item_Ammo_300Magnum_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 171,
+     "fields": {
+          "name": ".45 ACP Ammo",
+          "reference": "Item_Ammo_45ACP_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 172,
+     "fields": {
+          "name": "5.56mm Ammo",
+          "reference": "Item_Ammo_556mm_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 173,
+     "fields": {
+          "name": "7.62mm Ammo",
+          "reference": "Item_Ammo_762mm_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 174,
+     "fields": {
+          "name": "9mm Ammo",
+          "reference": "Item_Ammo_9mm_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 175,
+     "fields": {
+          "name": "Crossbow Bolt",
+          "reference": "Item_Ammo_Bolt_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 176,
+     "fields": {
+          "name": "Flare Gun Ammo",
+          "reference": "Item_Ammo_Flare_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 177,
+     "fields": {
+          "name": "Military Vest (Level 3)",
+          "reference": "Item_Armor_C_01_Lv3_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 178,
+     "fields": {
+          "name": "Police Vest (Level 2)",
+          "reference": "Item_Armor_D_01_Lv2_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 179,
+     "fields": {
+          "name": "Police Vest (Level 1)",
+          "reference": "Item_Armor_E_01_Lv1_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 180,
+     "fields": {
+          "name": "Angled Foregrip",
+          "reference": "Item_Attach_Weapon_Lower_AngledForeGrip_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 181,
+     "fields": {
+          "name": "Vertical Foregrip",
+          "reference": "Item_Attach_Weapon_Lower_Foregrip_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 182,
+     "fields": {
+          "name": "Half Grip",
+          "reference": "Item_Attach_Weapon_Lower_HalfGrip_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 183,
+     "fields": {
+          "name": "Laser Sight",
+          "reference": "Item_Attach_Weapon_Lower_LaserPointer_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 184,
+     "fields": {
+          "name": "Light Grip",
+          "reference": "Item_Attach_Weapon_Lower_LightweightForeGrip_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 185,
+     "fields": {
+          "name": "QuickDraw Crossbow Quiver",
+          "reference": "Item_Attach_Weapon_Lower_QuickDraw_Large_Crossbow_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 186,
+     "fields": {
+          "name": "Thumb Grip",
+          "reference": "Item_Attach_Weapon_Lower_ThumbGrip_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 187,
+     "fields": {
+          "name": "Large Extended Mag",
+          "reference": "Item_Attach_Weapon_Magazine_Extended_Large_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 188,
+     "fields": {
+          "name": "Medium Extended Mag",
+          "reference": "Item_Attach_Weapon_Magazine_Extended_Medium_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 189,
+     "fields": {
+          "name": "Small Extended Mag",
+          "reference": "Item_Attach_Weapon_Magazine_Extended_Small_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 190,
+     "fields": {
+          "name": "Sniper Rifle Extended Mag",
+          "reference": "Item_Attach_Weapon_Magazine_Extended_SniperRifle_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 191,
+     "fields": {
+          "name": "Large Extended QuickDraw Mag",
+          "reference": "Item_Attach_Weapon_Magazine_ExtendedQuickDraw_Large_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 192,
+     "fields": {
+          "name": "Medium Extended QuickDraw Mag",
+          "reference": "Item_Attach_Weapon_Magazine_ExtendedQuickDraw_Medium_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 193,
+     "fields": {
+          "name": "Small Extended QuickDraw Mag",
+          "reference": "Item_Attach_Weapon_Magazine_ExtendedQuickDraw_Small_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 194,
+     "fields": {
+          "name": "Sniper Rifle Extended QuickDraw Mag",
+          "reference": "Item_Attach_Weapon_Magazine_ExtendedQuickDraw_SniperRifle_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 195,
+     "fields": {
+          "name": "Large QuickDraw Mag",
+          "reference": "Item_Attach_Weapon_Magazine_QuickDraw_Large_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 196,
+     "fields": {
+          "name": "Medium Quickdraw Mag",
+          "reference": "Item_Attach_Weapon_Magazine_QuickDraw_Medium_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 197,
+     "fields": {
+          "name": "Small Quickdraw Mag",
+          "reference": "Item_Attach_Weapon_Magazine_QuickDraw_Small_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 198,
+     "fields": {
+          "name": "Sniper Rifle Quickdraw Mag",
+          "reference": "Item_Attach_Weapon_Magazine_QuickDraw_SniperRifle_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 199,
+     "fields": {
+          "name": "Choke",
+          "reference": "Item_Attach_Weapon_Muzzle_Choke_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 200,
+     "fields": {
+          "name": "Large Compensator",
+          "reference": "Item_Attach_Weapon_Muzzle_Compensator_Large_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 201,
+     "fields": {
+          "name": "Medium Compensator",
+          "reference": "Item_Attach_Weapon_Muzzle_Compensator_Medium_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 202,
+     "fields": {
+          "name": "Sniper Rifle Compensator",
+          "reference": "Item_Attach_Weapon_Muzzle_Compensator_SniperRifle_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 203,
+     "fields": {
+          "name": "Duckbill",
+          "reference": "Item_Attach_Weapon_Muzzle_Duckbill_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 204,
+     "fields": {
+          "name": "Large Flash Hider",
+          "reference": "Item_Attach_Weapon_Muzzle_FlashHider_Large_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 205,
+     "fields": {
+          "name": "Medium Flash Hider",
+          "reference": "Item_Attach_Weapon_Muzzle_FlashHider_Medium_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 206,
+     "fields": {
+          "name": "Sniper Rifle Flash Hider",
+          "reference": "Item_Attach_Weapon_Muzzle_FlashHider_SniperRifle_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 207,
+     "fields": {
+          "name": "Large Supressor",
+          "reference": "Item_Attach_Weapon_Muzzle_Suppressor_Large_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 208,
+     "fields": {
+          "name": "Medium Supressor",
+          "reference": "Item_Attach_Weapon_Muzzle_Suppressor_Medium_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 209,
+     "fields": {
+          "name": "Small Supressor",
+          "reference": "Item_Attach_Weapon_Muzzle_Suppressor_Small_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 210,
+     "fields": {
+          "name": "Sniper Rifle Supressor",
+          "reference": "Item_Attach_Weapon_Muzzle_Suppressor_SniperRifle_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 211,
+     "fields": {
+          "name": "Canted Sight",
+          "reference": "Item_Attach_Weapon_SideRail_DotSight_RMR_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 212,
+     "fields": {
+          "name": "Tactical Stock",
+          "reference": "Item_Attach_Weapon_Stock_AR_Composite_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 213,
+     "fields": {
+          "name": "Shotgun Bullet Loops",
+          "reference": "Item_Attach_Weapon_Stock_Shotgun_BulletLoops_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 214,
+     "fields": {
+          "name": "Sniper Rifle Bullet Loops",
+          "reference": "Item_Attach_Weapon_Stock_SniperRifle_BulletLoops_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 215,
+     "fields": {
+          "name": "Sniper Rifle Cheek Pad",
+          "reference": "Item_Attach_Weapon_Stock_SniperRifle_CheekPad_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 216,
+     "fields": {
+          "name": "Uzi Stock",
+          "reference": "Item_Attach_Weapon_Stock_UZI_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 217,
+     "fields": {
+          "name": "4x ACOG Scope",
+          "reference": "Item_Attach_Weapon_Upper_ACOG_01_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 218,
+     "fields": {
+          "name": "2x Aimpoint Scope",
+          "reference": "Item_Attach_Weapon_Upper_Aimpoint_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 219,
+     "fields": {
+          "name": "8x CQBSS Scope",
+          "reference": "Item_Attach_Weapon_Upper_CQBSS_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 220,
+     "fields": {
+          "name": "Red Dot Sight",
+          "reference": "Item_Attach_Weapon_Upper_DotSight_01_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 221,
+     "fields": {
+          "name": "Holographic Sight",
+          "reference": "Item_Attach_Weapon_Upper_Holosight_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 222,
+     "fields": {
+          "name": "15x PM II Scope",
+          "reference": "Item_Attach_Weapon_Upper_PM2_01_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 223,
+     "fields": {
+          "name": "3x Scope",
+          "reference": "Item_Attach_Weapon_Upper_Scope3x_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 224,
+     "fields": {
+          "name": "6x Scope",
+          "reference": "Item_Attach_Weapon_Upper_Scope6x_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 225,
+     "fields": {
+          "name": "Parachute",
+          "reference": "Item_Back_B_01_StartParachutePack_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 226,
+     "fields": {
+          "name": "Backpack (Level 3)",
+          "reference": "Item_Back_C_01_Lv3_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 227,
+     "fields": {
+          "name": "Backpack (Level 3)",
+          "reference": "Item_Back_C_02_Lv3_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 228,
+     "fields": {
+          "name": "Backpack (Level 1)",
+          "reference": "Item_Back_E_01_Lv1_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 229,
+     "fields": {
+          "name": "Backpack (Level 1)",
+          "reference": "Item_Back_E_02_Lv1_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 230,
+     "fields": {
+          "name": "Backpack (Level 2)",
+          "reference": "Item_Back_F_01_Lv2_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 231,
+     "fields": {
+          "name": "Backpack (Level 2)",
+          "reference": "Item_Back_F_02_Lv2_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 232,
+     "fields": {
+          "name": "Adrenaline Syringe",
+          "reference": "Item_Boost_AdrenalineSyringe_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 233,
+     "fields": {
+          "name": "Energy Drink",
+          "reference": "Item_Boost_EnergyDrink_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 234,
+     "fields": {
+          "name": "Painkiller",
+          "reference": "Item_Boost_PainKiller_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 235,
+     "fields": {
+          "name": "Ghillie Suit",
+          "reference": "Item_Ghillie_01_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 236,
+     "fields": {
+          "name": "Ghillie Suit",
+          "reference": "Item_Ghillie_02_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 237,
+     "fields": {
+          "name": "Ghillie Suit",
+          "reference": "Item_Ghillie_03_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 238,
+     "fields": {
+          "name": "Ghillie Suit",
+          "reference": "Item_Ghillie_04_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 239,
+     "fields": {
+          "name": "Motorcycle Helmet (Level 1)",
+          "reference": "Item_Head_E_01_Lv1_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 240,
+     "fields": {
+          "name": "Motorcycle Helmet (Level 1)",
+          "reference": "Item_Head_E_02_Lv1_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 241,
+     "fields": {
+          "name": "Military Helmet (Level 2)",
+          "reference": "Item_Head_F_01_Lv2_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 242,
+     "fields": {
+          "name": "Military Helmet (Level 2)",
+          "reference": "Item_Head_F_02_Lv2_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 243,
+     "fields": {
+          "name": "Spetsnaz Helmet (Level 3)",
+          "reference": "Item_Head_G_01_Lv3_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 244,
+     "fields": {
+          "name": "Bandage",
+          "reference": "Item_Heal_Bandage_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 245,
+     "fields": {
+          "name": "First Aid Kit",
+          "reference": "Item_Heal_FirstAid_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 246,
+     "fields": {
+          "name": "Med kit",
+          "reference": "Item_Heal_MedKit_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 247,
+     "fields": {
+          "name": "Gas Can",
+          "reference": "Item_JerryCan_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 248,
+     "fields": {
+          "name": "AKM",
+          "reference": "Item_Weapon_AK47_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 249,
+     "fields": {
+          "name": "Apple",
+          "reference": "Item_Weapon_Apple_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 250,
+     "fields": {
+          "name": "AUG A3",
+          "reference": "Item_Weapon_AUG_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 251,
+     "fields": {
+          "name": "AWM",
+          "reference": "Item_Weapon_AWM_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 252,
+     "fields": {
+          "name": "S686",
+          "reference": "Item_Weapon_Berreta686_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 253,
+     "fields": {
+          "name": "Beryl",
+          "reference": "Item_Weapon_BerylM762_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 254,
+     "fields": {
+          "name": "Bizon",
+          "reference": "Item_Weapon_BizonPP19_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 255,
+     "fields": {
+          "name": "Crowbar",
+          "reference": "Item_Weapon_Cowbar_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 256,
+     "fields": {
+          "name": "Crossbow",
+          "reference": "Item_Weapon_Crossbow_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 257,
+     "fields": {
+          "name": "Deagle",
+          "reference": "Item_Weapon_DesertEagle_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 258,
+     "fields": {
+          "name": "DBS",
+          "reference": "Item_Weapon_DP12_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 259,
+     "fields": {
+          "name": "DP-28",
+          "reference": "Item_Weapon_DP28_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 260,
+     "fields": {
+          "name": "Flare Gun",
+          "reference": "Item_Weapon_FlareGun_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 261,
+     "fields": {
+          "name": "Flashbang",
+          "reference": "Item_Weapon_FlashBang_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 262,
+     "fields": {
+          "name": "SLR",
+          "reference": "Item_Weapon_FNFal_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 263,
+     "fields": {
+          "name": "P18C",
+          "reference": "Item_Weapon_G18_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 264,
+     "fields": {
+          "name": "G36C",
+          "reference": "Item_Weapon_G36C_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 265,
+     "fields": {
+          "name": "Frag Grenade",
+          "reference": "Item_Weapon_Grenade_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 266,
+     "fields": {
+          "name": "Frag Grenade",
+          "reference": "Item_Weapon_Grenade_Warmode_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 267,
+     "fields": {
+          "name": "Groza",
+          "reference": "Item_Weapon_Groza_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 268,
+     "fields": {
+          "name": "M416",
+          "reference": "Item_Weapon_HK416_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 269,
+     "fields": {
+          "name": "Kar98k",
+          "reference": "Item_Weapon_Kar98k_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 270,
+     "fields": {
+          "name": "M16A4",
+          "reference": "Item_Weapon_M16A4_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 271,
+     "fields": {
+          "name": "P1911",
+          "reference": "Item_Weapon_M1911_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 272,
+     "fields": {
+          "name": "M249",
+          "reference": "Item_Weapon_M249_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 273,
+     "fields": {
+          "name": "M24",
+          "reference": "Item_Weapon_M24_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 274,
+     "fields": {
+          "name": "P92",
+          "reference": "Item_Weapon_M9_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 275,
+     "fields": {
+          "name": "Machete",
+          "reference": "Item_Weapon_Machete_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 276,
+     "fields": {
+          "name": "Mini 14",
+          "reference": "Item_Weapon_Mini14_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 277,
+     "fields": {
+          "name": "Mk14 EBR",
+          "reference": "Item_Weapon_Mk14_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 278,
+     "fields": {
+          "name": "Mk47 Mutant",
+          "reference": "Item_Weapon_Mk47Mutant_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 279,
+     "fields": {
+          "name": "Molotov Cocktail",
+          "reference": "Item_Weapon_Molotov_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 280,
+     "fields": {
+          "name": "MP5K",
+          "reference": "Item_Weapon_MP5K_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 281,
+     "fields": {
+          "name": "R1895",
+          "reference": "Item_Weapon_NagantM1895_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 282,
+     "fields": {
+          "name": "Pan",
+          "reference": "Item_Weapon_Pan_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 283,
+     "fields": {
+          "name": "Panzerfaust",
+          "reference": "Item_Weapon_PanzerFaust100M_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 284,
+     "fields": {
+          "name": "QBU88",
+          "reference": "Item_Weapon_QBU88_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 285,
+     "fields": {
+          "name": "QBZ95",
+          "reference": "Item_Weapon_QBZ95_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 286,
+     "fields": {
+          "name": "R45",
+          "reference": "Item_Weapon_Rhino_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 287,
+     "fields": {
+          "name": "Rock",
+          "reference": "Item_Weapon_Rock_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 288,
+     "fields": {
+          "name": "S12K",
+          "reference": "Item_Weapon_Saiga12_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 289,
+     "fields": {
+          "name": "Sawed-off",
+          "reference": "Item_Weapon_Sawnoff_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 290,
+     "fields": {
+          "name": "SCAR-L",
+          "reference": "Item_Weapon_SCAR-L_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 291,
+     "fields": {
+          "name": "Sickle",
+          "reference": "Item_Weapon_Sickle_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 292,
+     "fields": {
+          "name": "SKS",
+          "reference": "Item_Weapon_SKS_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 293,
+     "fields": {
+          "name": "Smoke Grenade",
+          "reference": "Item_Weapon_SmokeBomb_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 294,
+     "fields": {
+          "name": "Snowball",
+          "reference": "Item_Weapon_Snowball_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 295,
+     "fields": {
+          "name": "Spike Trap",
+          "reference": "Item_Weapon_SpikeTrap_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 296,
+     "fields": {
+          "name": "Sticky Bomb",
+          "reference": "Item_Weapon_StickyGrenade_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 297,
+     "fields": {
+          "name": "Tommy Gun",
+          "reference": "Item_Weapon_Thompson_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 298,
+     "fields": {
+          "name": "UMP9",
+          "reference": "Item_Weapon_UMP_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 299,
+     "fields": {
+          "name": "Micro Uzi",
+          "reference": "Item_Weapon_UZI_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 300,
+     "fields": {
+          "name": "Vector",
+          "reference": "Item_Weapon_Vector_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 301,
+     "fields": {
+          "name": "VSS",
+          "reference": "Item_Weapon_VSS_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 302,
+     "fields": {
+          "name": "Skorpion",
+          "reference": "Item_Weapon_vz61Skorpion_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 303,
+     "fields": {
+          "name": "Win94",
+          "reference": "Item_Weapon_Win1894_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 304,
+     "fields": {
+          "name": "S1897",
+          "reference": "Item_Weapon_Winchester_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 305,
+     "fields": {
+          "name": "Parachute",
+          "reference": "WarModeStartParachutePack_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 306,
+     "fields": {
+          "name": "Event Item",
+          "reference": "SP6_EventItem_DVD_01_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 307,
+     "fields": {
+          "name": "Event Item",
+          "reference": "SP6_EventItem_DVD_02_C"
+     }
+},
+{
+     "model": "api.itemtypelookup",
+     "pk": 308,
+     "fields": {
+          "name": "Event Item",
+          "reference": "SP6_EventItem_DVD_03_C"
+     }
+}
+]
