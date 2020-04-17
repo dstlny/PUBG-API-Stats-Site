@@ -2,8 +2,6 @@
 
 {% block body %}
 
-
-
 	<script type="application/javascript">
 		$(document).ready(function() {
 			telem_data = [
@@ -42,6 +40,7 @@
 				bSort: true,
 				bLengthChange: true,
 			});
+
 		});
 	</script>
 
@@ -73,30 +72,13 @@
 							</p>
 						</div>
 						<div class="list-group d-flex flex-row flex-wrap">
-							<p class="list-group-item text-center" style='width: 50%;'>
+							<p class="list-group-item text-center" style='width: 100%;'>
 								Heals/Boosts used: <br>{{ telemetry_data.match_heals_used }}
 							</p>
 						</div>
-	
-					</div>
-				</div>
-				<br>
-				<div class="card" id='match_detail_container'>
-					<div class="card-header" style='text-align: center'>
-						Team Details
-					</div>
-					<div class='card-body'>
-						<table class='table table-condensed hover' id='team_datatable_datatable' style='width: 100%'>
-							<thead>
-								<tr>
-									<th width='33%'>Player name</th>
-									<th width='33%'>Kills</th>
-									<th width='33%'>Damage</th>
-								</tr>
-							</thead>
-							<tbody>
-							</tbody>
-						</table>
+						<div class="list-group d-flex flex-row flex-wrap" style='width: 100%;'>
+							<img id="map_image" width="100%" src="{{ telemetry_data.map_image }}"/>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -119,7 +101,26 @@
 						</table>
 					</div>
 				</div>
-
+				<br>
+				<div class="card" id='match_detail_container'>
+					<div class="card-header" style='text-align: center'>
+						Team Details
+					</div>
+					<div class='card-body'>
+						<table class='table table-condensed hover' id='team_datatable_datatable' style='width: 100%'>
+							<thead>
+								<tr>
+									<th width='33%'>Player name</th>
+									<th width='33%'>Kills</th>
+									<th width='33%'>Damage</th>
+								</tr>
+							</thead>
+							<tbody>
+							</tbody>
+						</table>
+					</div>
+				</div>
+				<br><br>
 			</div>
 
 		</div>

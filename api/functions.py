@@ -579,6 +579,11 @@ def parse_match_telemetry(url, asset_id, telemetry_data, date_created, match, ac
 
 					killer_name = log_event['killer']['name']
 					killer_id = log_event['killer']['accountId']
+					killer_x = log_event['killer']['location']['x']
+					killer_y = log_event['killer']['location']['y']
+
+					victim_x = None
+					victim_y = None
 					
 					if killer_id == account_id:
 						killer_name = 'You'
@@ -586,6 +591,11 @@ def parse_match_telemetry(url, asset_id, telemetry_data, date_created, match, ac
 						dead = False
 
 				else:
+
+					victim_x = log_event['victim']['location']['x']
+					victim_y = log_event['victim']['location']['y']
+					killer_x = victim_x
+					killer_y = victim_y
 
 					damage_type = log_event.get('damageTypeCategory')
 
@@ -616,7 +626,9 @@ def parse_match_telemetry(url, asset_id, telemetry_data, date_created, match, ac
 					timestamp=event_timestamp,
 					description=event_description,
 					telemetry=match_telemet,
-					player=this_player
+					player=this_player,
+					x_cord=killer_x,
+					y_cord=killer_y
 				)
 				
 				if save:

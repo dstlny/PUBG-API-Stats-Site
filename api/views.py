@@ -441,7 +441,9 @@ def match_detail(request, match_id):
 		)
 
 		telemetry = Telemetry.objects.filter(match=match)
-		telemetry_events = TelemetryEvent.objects.filter(telemetry__in=telemetry)
+		telemetry = telemetry.first()
+
+		telemetry_events = TelemetryEvent.objects.filter(telemetry=telemetry)
 
 		log_match_start = get_object_or_404(telemetry_events, event_type__iexact='LogMatchStart')
 		total_match_kills = get_object_or_404(telemetry_events, event_type__iexact='LogTotalMatchKills')
@@ -467,12 +469,12 @@ def match_detail(request, match_id):
 
 		telemetry_events = telemetry_events.exclude(event_type__iexact='LogTotalMatchKills')
 		
-
 		elapased_time = datetime.strptime(log_match_end_timestamp, FMT) - datetime.strptime(log_match_start_timestamp, FMT)
 
 		heals_used = telemetry_events.filter(event_type__iexact='LogItemUse').count()
 
 		match_roster = get_object_or_404(Roster, match=match)
+		match_map_url = match_roster.match.map.image_url
 
 		telemetry_data = {
 			'telemetry_data':{
@@ -481,6 +483,7 @@ def match_detail(request, match_id):
 				'match_elapsed_time': f'{elapased_time} minutes',
 				'match_map_name': log_match_start.telemetry.match.map.name,
 				'match_heals_used': heals_used,
+				'map_image': match_map_url,
 				'team_details': [
 					{
 						'player_name': x.player_name,
@@ -491,7 +494,9 @@ def match_detail(request, match_id):
 				'events':[
 					{
 						'timestamp': datetime.strftime(parse(x.timestamp), '%H:%M:%S'),
-						'event': x.description
+						'event': x.description,
+						'x_cord': x.x_cord,
+						'y_cord': x.y_cord
 					} for x in telemetry_events			
 				]
 			}

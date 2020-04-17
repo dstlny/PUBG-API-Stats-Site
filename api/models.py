@@ -4,6 +4,7 @@ from django.db import models
 class Map(models.Model):
     name = models.CharField(max_length=64)
     reference = models.CharField(max_length=64)
+    image_url = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         return "{} ({})".format(self.name, self.reference)
@@ -131,6 +132,8 @@ class TelemetryEvent(models.Model):
     description = models.CharField(max_length=255)
     telemetry = models.ForeignKey('Telemetry', on_delete=models.CASCADE)
     player =  models.ForeignKey('Player', on_delete=models.CASCADE, blank=True, null=True)
+    x_cord = models.FloatField(blank=True, null=True) 
+    y_cord = models.FloatField(blank=True, null=True) 
 
     def __str__(self):
         return f"{self.timestamp} - {self.event_type} - {self.description}"
