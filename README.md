@@ -5,7 +5,7 @@
 - NodeJS simply passes requests from the front-end to the backend.
 - Python does all the heavy lifting.
 
-# Getting started
+# Getting started - things that probably need to be done
 - Any version of Python3 should work.
 - Install the python dependencies using `pip install -r requirements.txt`.
 - Install node dependencies using `npm install`.
@@ -16,3 +16,6 @@
 - Change `threads=8` in `server.py` to the amount of cores your machine has.
 - Start node using `node server` or `nodemon server` if you have nodemon installed.
 - Navigate to localhost, and search away.
+
+# Getting started - things that are optional, but give starting data for some tables.
+- Load the fixtures within api/fixtures by using the following syntax `python manage.py loaddata api/fixtures/fixtures.json`.
