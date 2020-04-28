@@ -10,8 +10,6 @@ from api.functions import (
 	make_request, build_match_url, get_match_telemetry_from_match
 )
 
-# populate_seasons()
-
 from api.models import *
 
 import time

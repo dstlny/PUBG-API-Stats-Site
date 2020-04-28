@@ -2,129 +2,251 @@
 
 {% block body %}
 
-	<script type="application/javascript">
-		$(document).ready(function() {
-			telem_data = [
-				{% for telemetry in telemetry_data.events %}
-					['{{ telemetry.timestamp }}', '{{ telemetry.event|safe }}'],
-				{% endfor %}
-			];
+<script type="application/javascript">
 
+	image = $('#map_image')[0]
 
-			team_mate_date = [
-				{% for team_data in telemetry_data.team_details %}
-					['{{ team_data.player_name }}', '{{ team_data.kills }}', '{{ team_data.damage }}'],
-				{% endfor %}
-			];
+	telem_data = [
+		{%- for telemetry in telemetry_data.events -%}
+			['{{- telemetry.timestamp }}', '{{ telemetry.event|safe -}}'],
+		{%- endfor -%}
+	];
 
-			$('#telemetry_datatable_datatable').DataTable({
-				data: telem_data,
-				pageLength: 5,
-				order: [[ 0, "asc" ]],
-				scrollY:  "400px",
-				scrollCollapse: true,
-				paging: false,
-				bFilter: true,
-				bSort: true,
-				bLengthChange: true,
-			});
+	x_y_co_ords = [
+		{%- for telemetry in telemetry_data.events -%}
+			{%- if telemetry.x_cord -%}
+				{
+					x: '{{- telemetry.x_cord -}}',
+					y: '{{- telemetry.y_cord -}}',
+						id: 'telem_{{- loop.index -}}'
+				},
+			{%- endif -%}
+		{%- endfor -%}
+	];
 
-			$('#team_datatable_datatable').DataTable({
-				data: team_mate_date,
-				pageLength: 5,
-				order: [[ 1, "desc" ]],
-				scrollY:  "200px",
-				scrollCollapse: true,
-				paging: false,
-				bFilter: true,
-				bSort: true,
-				bLengthChange: true,
-			});
+	team_mate_data = [
+		{%- for team_data in telemetry_data.team_details -%}
+			['{{- team_data.player_name -}}', '{{- team_data.kills -}}', '{{- team_data.damage -}}'],
+		{%- endfor -%}
+	];
 
+	original_width = 819.99
+    original_height = original_width
+    
+    map_name = "{{ telemetry_data.match_map_name }}"
+
+	$(document).ready(function () {
+
+		$('#telemetry_datatable_datatable').DataTable({
+			data: telem_data,
+			pageLength: 5,
+			order: [[0, "asc"]],
+			scrollY: "400px",
+			scrollCollapse: true,
+			paging: false,
+			bFilter: true,
+			bSort: true,
+			bLengthChange: true,
 		});
-	</script>
 
-	<div class="container">
+		$('#team_datatable_datatable').DataTable({
+			data: team_mate_data,
+			pageLength: 5,
+			order: [[1, "desc"]],
+			scrollY: "200px",
+			scrollCollapse: true,
+			paging: false,
+			bFilter: true,
+			bSort: true,
+			bLengthChange: true,
+		});
 
-		<div class='row'>
+		var map_canvas = document.getElementById('map_canvas')
+		map_context = map_canvas.getContext('2d');
 
-			<div class="col-md-6">
-				<div class="card" id='match_detail_container'>
-					<div class="card-header" style='text-align: center'>
-						Match Details
+		var markers = []
+
+        make_base();
+
+        function map_scale(size){
+            switch(map_name){
+                case 'Erangel': return Math.floor(816000 / size);
+                case 'Miramar': return Math.floor(816000 / size);
+                case 'Sanhok': return Math.floor(408000 / size);
+                case 'Camp Jackal': return Math.floor(204000 / size);
+                case 'Karakin': return Math.floor(204000 / size);
+                case 'Vikendi': return Math.floor(612000 / size);
+            }
+        }
+
+		function make_base() {
+			map_container_width = $('#map_container')[0]
+			image = new Image();
+			image.src = "{{ telemetry_data.map_image }}";
+			image.width = map_container_width.offsetWidth
+			image.height = map_container_width.offsetWidth
+			map_context.canvas.width = image.width;
+			map_context.canvas.height = image.height;
+
+			image.onload = function () {
+				map_context.drawImage(image, 0, 0, map_canvas.width, map_canvas.height);
+				draw_markers(image, map_scale(image.width))
+			};
+        }
+
+		function draw_markers(image, this_scale) {
+			map_context.fillStyle = "rgb(255, 255, 255, 0)";
+			map_context.fillRect(0, 0, map_canvas.width, map_canvas.height);
+
+			new_width = image.width
+			new_height = image.height
+
+			x_y_co_ords.forEach(function (item) {
+
+				new_x = item.x / this_scale
+                new_y = item.y / this_scale
+
+				map_context.fillStyle = 'red';
+				map_context.beginPath();
+				map_context.arc(new_x, new_y, 5, 0, 2 * Math.PI, true);
+				map_context.fill();
+				map_context.stroke()
+			});
+
+		}
+
+		$(window).resize(function () {
+			make_base();
+		});
+
+		function intersects(x, y, cx, cy, r) {
+			var dx = x - cx
+			var dy = y - cy
+			return dx * dx + dy * dy <= r * r
+		}
+
+		map_canvas.addEventListener("click", function (e) {
+			let rect = map_canvas.getBoundingClientRect();
+			let x = event.clientX - rect.left;
+			let y = event.clientY - rect.top;
+
+			width = map_context.canvas.width
+            height = map_context.canvas.height
+            
+            this_scale = map_scale(width)
+
+			x_y_co_ords.forEach(function (item) {
+                
+                new_x = item.x / this_scale
+                new_y = item.y / this_scale
+
+				if (intersects(x, y, new_x, new_y, 5)) {
+					$(`#${item.id}`).css({ 'top': e.pageY - 60, 'left': x + 20, 'position': 'absolute', 'border': '1px solid black', 'padding': '5px' });
+					$(`#${item.id}`).show();
+				} else {
+					$(`#${item.id}`).hide();
+				}
+
+			});
+		});
+
+
+	});
+
+</script>
+
+<div class="container">
+
+	<div class='row'>
+
+		<div class="col-md-6">
+			<div class="card" id='match_detail_container'>
+				<div class="card-header" style='text-align: center'>
+					Match Details
+				</div>
+				<div class="card-body" style='height: max-content;' id='match_detail_container_body'>
+					<div class="list-group d-flex flex-row flex-wrap">
+						<p class="list-group-item text-center" style='width: 50%;'>
+							Match ID:<br>{{ telemetry_data.match_id }}
+						</p>
+						<p class="list-group-item text-center" style='width: 50%;'>
+							Match Map:<br>{{ telemetry_data.match_map_name }}
+						</p>
 					</div>
-					<div class="card-body">
-
-						<div class="list-group d-flex flex-row flex-wrap">
-							<p class="list-group-item text-center" style='width: 50%;'>
-								Match ID:<br>{{ telemetry_data.match_id }}
-							</p>
-							<p class="list-group-item text-center" style='width: 50%;'>
-								Match Map:<br>{{ telemetry_data.match_map_name }}
-							</p>
-						</div>
-						<div class="list-group d-flex flex-row flex-wrap">
-							<p class="list-group-item text-center" style='width: 50%;'>
-								Your Kills: <br>{{ telemetry_data.player_kills }}
-							</p>
-							<p class="list-group-item text-center" style='width: 50%;'>
-								Match elapsed time: <br>{{ telemetry_data.match_elapsed_time }}
-							</p>
-						</div>
-						<div class="list-group d-flex flex-row flex-wrap">
-							<p class="list-group-item text-center" style='width: 100%;'>
-								Heals/Boosts used: <br>{{ telemetry_data.match_heals_used }}
-							</p>
-						</div>
-						<div class="list-group d-flex flex-row flex-wrap" style='width: 100%;'>
-							<img id="map_image" width="100%" src="{{ telemetry_data.map_image }}"/>
-						</div>
+					<div class="list-group d-flex flex-row flex-wrap">
+						<p class="list-group-item text-center" style='width: 50%;'>
+							Your Kills: <br>{{ telemetry_data.player_kills }}
+						</p>
+						<p class="list-group-item text-center" style='width: 50%;'>
+							Match elapsed time: <br>{{ telemetry_data.match_elapsed_time }}
+						</p>
+					</div>
+					<div class="list-group d-flex flex-row flex-wrap">
+						<p class="list-group-item text-center" style='width: 100%;'>
+							Heals/Boosts used: <br>{{ telemetry_data.match_heals_used }}
+						</p>
+					</div>
+					<div class="list-group d-flex flex-row flex-wrap" style='width: 100%' id='map_container'>
+						<canvas id="map_canvas" width="100%"></canvas>
+						{%- for telemetry in telemetry_data.events -%}
+							{%- if telemetry.x_cord -%}
+								<div class="card mb-3" id='telem_{{- loop.index -}}' style="max-width: 18rem; display: none;">
+									<div class="card-header">
+										{{ telemetry.timestamp }}
+									</div>
+									<div class="card-body">
+										{{ telemetry.event|safe -}}
+									</div>
+								</div>
+							{%- endif -%}
+						{%- endfor -%}
 					</div>
 				</div>
 			</div>
+		</div>
 
-			<div class="col-md-6" style='height: 150px'>
-				<div class="card" id='telemetry_datatable_container'>
-					<div class="card-header" style='text-align: center'>
-						Match events
-					</div>
-					<div class="card-body">
-						<table class='table table-condensed hover' id='telemetry_datatable_datatable'  style="width:100%;">
-							<thead>
-								<tr>
-									<th width='30%'>Timestamp</th>
-									<th width='70%'>Event</th>
-								</tr>
-							</thead>
-							<tbody>
-							</tbody>
-						</table>
-					</div>
+		<div class="col-md-6" style='height: 150px'>
+			<div class="card" id='telemetry_datatable_container'>
+				<div class="card-header" style='text-align: center'>
+					Match events
 				</div>
-				<br>
-				<div class="card" id='match_detail_container'>
-					<div class="card-header" style='text-align: center'>
-						Team Details
-					</div>
-					<div class='card-body'>
-						<table class='table table-condensed hover' id='team_datatable_datatable' style='width: 100%'>
-							<thead>
-								<tr>
-									<th width='33%'>Player name</th>
-									<th width='33%'>Kills</th>
-									<th width='33%'>Damage</th>
-								</tr>
-							</thead>
-							<tbody>
-							</tbody>
-						</table>
-					</div>
+				<div class="card-body">
+					<table class='table table-condensed hover' id='telemetry_datatable_datatable' style="width:100%;">
+						<thead>
+							<tr>
+								<th width='30%'>Timestamp</th>
+								<th width='70%'>Event</th>
+							</tr>
+						</thead>
+						<tbody>
+						</tbody>
+					</table>
 				</div>
-				<br><br>
 			</div>
-
+			<br>
+			<div class="card" id='match_detail_container'>
+				<div class="card-header" style='text-align: center'>
+					Team Details
+				</div>
+				<div class='card-body'>
+					<table class='table table-condensed hover' id='team_datatable_datatable' style='width: 100%'>
+						<thead>
+							<tr>
+								<th width='33%'>Player name</th>
+								<th width='33%'>Kills</th>
+								<th width='33%'>Damage</th>
+							</tr>
+						</thead>
+						<tbody>
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<br><br>
 		</div>
 
 	</div>
+
+</div>
 
 {% endblock %}

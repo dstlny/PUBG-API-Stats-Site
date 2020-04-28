@@ -1,6 +1,6 @@
 const fastify = require('fastify')(),
-	  path = require('path'),
-	  utlity = require('./utility')
+	path = require('path'),
+    utlity = require('./utility')
 
 fastify.register(require('fastify-formbody'))
 
@@ -9,7 +9,7 @@ fastify.register(require('point-of-view'), {
 		nunjucks: require('nunjucks')
 	},
 	templates: './templates/',
-  	includeViewExtension: false
+	includeViewExtension: false
 })
 
 fastify.register(require('fastify-static'), {
@@ -17,6 +17,7 @@ fastify.register(require('fastify-static'), {
 	prefix: '/static/'
 })
 
+// routes
 fastify.register(require('./routes/index/index'))
 fastify.register(require('./routes/search/search'))
 fastify.register(require('./routes/retrieve_season_stats/retrieve_season_stats'))
@@ -24,7 +25,7 @@ fastify.register(require('./routes/retrieve_matches/retrieve_matches'))
 fastify.register(require('./routes/backend_status/backend_status'))
 fastify.register(require('./routes/match_detail/match_detail'))
 
-fastify.listen(7009, () => {
+fastify.listen(7009, async() => {
 	console.log(`NodeJS up and running on port ${7009}!`)
 	utlity.checkStatus(true, false, false)
 })

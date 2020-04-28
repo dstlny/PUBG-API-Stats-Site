@@ -155,7 +155,6 @@ function callForm(){
 	$('#seasons_container').hide();
 
 	let form_data = $('#search_form').serialize();
-	let form_method = $('#search_form').attr('method')
 
 	player_name = document.getElementById("id_player_name").value
 
@@ -176,7 +175,7 @@ function callForm(){
 
 	$.ajax({
 		data: form_data,
-		type: form_method,
+		type: 'POST',
 		url: $('#search_form').attr('action'),
 		async: true,
 		success: function (data, status, xhr) {

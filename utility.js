@@ -1,6 +1,7 @@
 axios = require('axios')
 
 function checkStatus(log, answer, promise){
+
 	if(promise == true)
 		return new Promise((resolve, reject) => {
 			axios.get('http://127.0.0.1:8000/api/status')
