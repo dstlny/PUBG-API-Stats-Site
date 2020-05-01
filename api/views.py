@@ -36,6 +36,8 @@ from rest_framework.response import Response
 from rest_framework.request import Request
 from django.shortcuts import redirect
 from dateutil.parser import parse
+import ast
+from django.db.models import Q
 
 @api_view(['GET'])
 def status(request):
@@ -95,10 +97,10 @@ def search(request):
 
 		if 'data' in player_response:
 
-			try:
+			if isinstance(player_response['data'], list):
 				player_id = player_response['data'][0]['id']
-			except:
-				player_id =  player_response['data']['id']
+			else:
+				player_id = player_response['data']['id']
 
 			ajax_data['player_id'] = player_id
 			ajax_data['player_name']  = player_name
@@ -107,7 +109,7 @@ def search(request):
 			game_mode = correct_mode(game_mode)
 
 			pool = multiprocessing.Pool(processes=1)
-			print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'.format(player_name))
+			print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{} - {}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'.format(player_name, player_id))
 			pool.apply_async(get_player_matches, (platform_url, player_response, perspective, game_mode))
 
 			season_cache = '{}_season_data'.format(player_id)
@@ -245,7 +247,6 @@ def retrieve_matches(request):
 
 		if player_id and perspective and game_mode:
 			
-			roster_data = []
 			message =  None
 
 			kwargs = {}
@@ -417,6 +418,7 @@ def match_detail(request, match_id):
 
 	matches = Match.objects.only('api_id')
 	match_exists =  matches.filter(api_id__iexact=match_id)
+	telemetry_objects = Telemetry.objects.filter(match__in=matches)
 
 	split = match_id.split('_')
 	account_id = split[0]
@@ -424,28 +426,66 @@ def match_detail(request, match_id):
 
 	if match_exists.exists():
 		match = match_exists.first()
-		match_url = match.api_url
+		telemetry_exists = telemetry_objects.filter(match=match)
 
-		if not match_url or match_id not in match_url:
-			current_player = get_object_or_404(Player, api_id=account_id)
-			platform_url = current_player.platform_url
-			match_url = build_match_url(platform_url, match_id)
+		if not telemetry_exists.exists():
 
-		match_json = make_request(match_url)
+			match_url = match.api_url
 
-		get_match_telemetry_from_match(
-			match_json=match_json,
-			match=match
-		)
+			if not match_url or match_id not in match_url:
+				current_player = get_object_or_404(Player, api_id=account_id)
+				platform_url = current_player.platform_url
+				match_url = build_match_url(platform_url, match_id)
 
-		telemetry = Telemetry.objects.filter(match=match)
-		telemetry = telemetry.first()
+			match_json = make_request(match_url)
+
+			get_match_telemetry_from_match(
+				match_json=match_json,
+				match=match
+			)
+
+			telemetry = telemetry_objects.filter(match=match)
+			telemetry = telemetry.first()
+
+			rosters = [
+				{
+					'roster_id': x['id'],
+					'roster_rank': x['attributes']['stats']['rank'],
+					'participant_objects':''.join(
+						[
+							f"{y['attributes']['stats']['name']}: {y['attributes']['stats']['kills']} kill(s) | {round(y['attributes']['stats']['damageDealt'], 2)} damage<br>"
+							for y in match_json['included']
+							if y['type'] == 'participant' and any(y['id'] == z['id'] for z in x['relationships']['participants']['data'])
+						]
+					),
+				} for x in match_json['included'] if x['type'] == 'roster'
+			]
+
+			telemetry_events = [
+				TelemetryEvent(
+					event_type='Roster',
+					telemetry=telemetry,
+					description=json.dumps(roster),
+					timestamp=None,
+					player=None,
+					x_cord=None,
+					y_cord=None
+				)
+				for roster in rosters
+			]
+			TelemetryEvent.objects.bulk_create(telemetry_events)
+			
+			del rosters
+
+		else:
+			telemetry = telemetry_exists.first()
 
 		telemetry_events = TelemetryEvent.objects.filter(telemetry=telemetry)
 
 		log_match_start = get_object_or_404(telemetry_events, event_type__iexact='LogMatchStart')
 		total_match_kills = get_object_or_404(telemetry_events, event_type__iexact='LogTotalMatchKills')
 		log_match_end = get_object_or_404(telemetry_events, event_type__iexact='LogMatchEnd')
+		roster_telem = telemetry_events.filter(event_type__iexact='Roster')
 
 		log_match_start_timestamp = parse(log_match_start.timestamp)
 		log_match_start_timestamp = str(log_match_start_timestamp)
@@ -464,41 +504,37 @@ def match_detail(request, match_id):
 		log_match_end_timestamp = str(log_match_end_timestamp).split('.')[0]
 
 		FMT = '%Y-%m-%d %H:%M:%S'
-
-		telemetry_events = telemetry_events.exclude(event_type__iexact='LogTotalMatchKills')
 		
 		elapased_time = datetime.strptime(log_match_end_timestamp, FMT) - datetime.strptime(log_match_start_timestamp, FMT)
 
 		heals_used = telemetry_events.filter(event_type__iexact='LogItemUse').count()
+		telemetry_excluding_some_events = telemetry_events.exclude(Q(event_type__iexact='LogTotalMatchKills') | Q(event_type__iexact='Roster') | Q(timestamp__isnull=True))
 
-		match_roster = get_object_or_404(Roster, match=match)
-		match_map_url = match_roster.match.map.image_url
+		match_map_url = match.map.image_url
+		map_name = match.map.name
 
 		telemetry_data = {
 			'telemetry_data':{
 				'player_kills': total_match_kills.description,
-				'match_id': log_match_start.telemetry.match.api_id.split('_')[1],
+				'match_id': match_id,
 				'match_elapsed_time': f'{elapased_time} minutes',
-				'match_map_name': log_match_start.telemetry.match.map.name,
+				'match_map_name': map_name,
 				'match_heals_used': heals_used,
 				'map_image': match_map_url,
-				'team_details': [
-					{
-						'player_name': x.player_name,
-						'kills': x.kills,
-						'damage': x.damage
-					} for x in match_roster.participants.all() if match_roster
-				],
-				'events':[
+				'events': [
 					{
 						'timestamp': datetime.strftime(parse(x.timestamp), '%H:%M:%S'),
 						'event': x.description,
 						'x_cord': x.x_cord,
 						'y_cord': x.y_cord
-					} for x in telemetry_events			
+					} for x in telemetry_excluding_some_events
+				],
+				'rosters': [
+				  	json.loads(x.description.split("b'")[1].split("\'")[0])
+				  	for x in roster_telem if x.description
 				]
 			}
 		}
-
+		
 		return Response(telemetry_data)
 		

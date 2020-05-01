@@ -156,7 +156,11 @@ def parse_player_object(platform_url, player_response):
 		match_queryset = Match.objects.only('api_id')
 		player_queryset = Player.objects.only('api_id')
 
-		player_id = player_response['data'][0]['id']
+		if isinstance(player_response['data'], list):
+			player_id = player_response['data'][0]['id']
+		else:
+			player_id = player_response['data']['id']
+
 		player = player_queryset.filter(api_id=player_id)
 
 		if not player.exists():
@@ -167,10 +171,16 @@ def parse_player_object(platform_url, player_response):
 			)
 			player.save()
 
-		matches = [
-			make_request(build_match_url(platform_url, match['id'])) for match in player_response['data'][0]['relationships']['matches']['data']
-			if not match_queryset.filter(api_id=get_player_match_id(player_id, match['id'])).exists()
-		]
+		if isinstance(player_response['data'], list):
+			matches = [
+				make_request(build_match_url(platform_url, match['id'])) for match in player_response['data'][0]['relationships']['matches']['data']
+				if not match_queryset.filter(api_id=get_player_match_id(player_id, match['id'])).exists()
+			]
+		else:
+			matches = [
+				make_request(build_match_url(platform_url, match['id'])) for match in player_response['data']['relationships']['matches']['data']
+				if not match_queryset.filter(api_id=get_player_match_id(player_id, match['id'])).exists()
+			]
 
 		return player_id, matches
 	else:
@@ -220,13 +230,14 @@ def parse_player_matches(match_json_list, player_id):
 					reference=match_map_reference
 				)
 				map.save()
+				map_id = map.id
 			else:
-				map = map.first()
+				map_id = map.first().id
 
 			this_match = Match(
 				api_id=get_player_match_id(player_id, match_id),
 				created=match_date,
-				map=map,
+				map_id=map_id,
 				mode=match_mode,
 				api_url=match_url,
 				is_custom_match=match_custom
@@ -256,7 +267,7 @@ def parse_player_matches(match_json_list, player_id):
 
 			roster = Roster(
 				placement=roster_placement,
-				match=this_match,
+				match_id=this_match.id,
 				api_id=roster_id
 			)
 			roster.save()
@@ -295,17 +306,16 @@ def parse_player_matches(match_json_list, player_id):
 					player_name=participant_name,
 					placement=participant_placement,
 					damage=participant_damage,
-					player=participant_player_object  
+					player_id=participant_player_object.id 
 				)
 				participant_object.save()
 				
 				roster_participant = RosterParticipant(
-					roster=roster,
-					participant=participant_object
+					roster_id=roster.id,
+					participant_id=participant_object.id
 				)
 				roster_participant.save()
 			
-
 			seconds_taken = "{:0.4f}".format(time.time() - start_time)
 			print(
 				f"--- parsing {match_id} took {seconds_taken}(s) ---"
@@ -446,12 +456,12 @@ def retrieve_player_season_stats(player_id, platform):
 					weekly_wins=weeklyWins,
 					win_points=winPoints,
 					wins=wins,
-					player=current_player,
-					season=current_season
+					player_id=current_player.id,
+					season_id=current_season.id
 				).save()
 
 def get_match_telemetry_from_match(match_json, match):
-
+	
 	assets = [
 		x for x in match_json['included']
 		if x['type'] == 'asset'
@@ -478,8 +488,11 @@ def get_match_telemetry_from_match(match_json, match):
 
 def parse_match_telemetry(url, asset_id, telemetry_data, date_created, match, account_id):
 
-	telemetry_check = Telemetry.objects.filter(match=match, api_id=asset_id)
+	telemetry_check = Telemetry.objects.filter(match_id=match.id, api_id=asset_id)
 	this_player = get_object_or_404(Player, api_id=account_id)
+	kill_causes = ItemTypeLookup.objects.only('name', 'reference')
+
+	telemetry_events = []
 
 	save = True
 
@@ -493,7 +506,7 @@ def parse_match_telemetry(url, asset_id, telemetry_data, date_created, match, ac
 			api_id=asset_id,
 			api_url=url,
 			created_at=date_created,
-			match=match
+			match_id=match.id
 		)
 
 		if save:
@@ -511,9 +524,9 @@ def parse_match_telemetry(url, asset_id, telemetry_data, date_created, match, ac
 			'LogItemUse',
 			'LogPlayerKill',
 			'LogMatchEnd',
-			'LogMatchStart'
+			'LogMatchStart',
 		]
-				
+	
 		log_player_events = [
 			x for x in telemetry_data
 			if x['_T'] in telem_to_capture
@@ -610,7 +623,8 @@ def parse_match_telemetry(url, asset_id, telemetry_data, date_created, match, ac
 					kill_location = None
 
 				kill_cause = log_event['damageCauserName']
-				kill_cause = get_object_or_404(ItemTypeLookup, reference=kill_cause)
+				kill_cause = kill_causes.filter(reference=kill_cause)
+				kill_cause = kill_cause.first()
 				kill_cause = kill_cause.name
 
 				if kill_cause in ['Redzone', 'Bluezone']:
@@ -621,19 +635,16 @@ def parse_match_telemetry(url, asset_id, telemetry_data, date_created, match, ac
 					else:
 						event_description = f'<b>{killer_name}</b> killed <b>{victim_name}</b> with a <b>{kill_cause}</b>'
 
-				telemetry_event = TelemetryEvent(
+				telemetry_events.append(TelemetryEvent(
 					event_type=event_type,
 					timestamp=event_timestamp,
 					description=event_description,
-					telemetry=match_telemet,
-					player=this_player,
+					telemetry_id=match_telemet.id,
+					player_id=this_player.id,
 					x_cord=killer_x,
 					y_cord=killer_y
-				)
+				))
 				
-				if save:
-					telemetry_event.save()
-
 				if match_kills:
 					
 					if dead:
@@ -641,35 +652,30 @@ def parse_match_telemetry(url, asset_id, telemetry_data, date_created, match, ac
 					else:
 						event_description = f'<b>You</b> now have <b>{match_kills} kill(s)</b>'
 
-					telemetry_event = TelemetryEvent(
+					telemetry_events.append(TelemetryEvent(
 						event_type=event_type,
 						timestamp=event_timestamp,
 						description=event_description,
-						telemetry=match_telemet,
-						player=this_player
-					)
-
-					if save:
-						telemetry_event.save()
+						telemetry_id=match_telemet.id,
+						player_id=this_player.id
+					))
 
 			if event_type == 'LogItemUse':
 
 				item_id = log_event['item']['itemId']
-				item_used = get_object_or_404(ItemTypeLookup, reference=item_id)
+				item_used = kill_causes.filter(reference=item_id)
+				item_used = item_used.first()
 				item_used = item_used.name
 
 				event_description = f'<b>You</b> used a <b>{item_used}</b>'
 
-				telemetry_event = TelemetryEvent(
+				telemetry_events.append(TelemetryEvent(
 					event_type=event_type,
 					timestamp=event_timestamp,
 					description=event_description,
-					telemetry=match_telemet,
-					player=this_player
-				)
-
-				if save:
-					telemetry_event.save()
+					telemetry_id=match_telemet.id,
+					player_id=this_player.id
+				))
 
 			if event_type == 'LogMatchEnd':
 
@@ -687,42 +693,35 @@ def parse_match_telemetry(url, asset_id, telemetry_data, date_created, match, ac
 				else:
 					event_description = f'<b>You</b> did not win this match. Better luck next time!'
 
-				telemetry_event = TelemetryEvent(
+				telemetry_events.append(TelemetryEvent(
 					event_type=event_type,
 					timestamp=event_timestamp,
 					description=event_description,
-					telemetry=match_telemet,
-					player=this_player
-				)
-
-				if save:
-					telemetry_event.save()
+					telemetry_id=match_telemet.id,
+					player_id=this_player.id
+				))
 
 			if event_type == 'LogMatchStart':
 
 				event_description = 'Match started'
 
-				telemetry_event = TelemetryEvent(
+				telemetry_events.append(TelemetryEvent(
 					event_type=event_type,
 					timestamp=event_timestamp,
 					description=event_description,
-					telemetry=match_telemet,
-					player=this_player
-				)
-
-				if save:
-					telemetry_event.save()
+					telemetry_id=match_telemet.id,
+					player_id=this_player.id
+				))
 
 		event_description = match_kills
 		event_type = 'LogTotalMatchKills'
 
-		telemetry_event = TelemetryEvent(
+		telemetry_events.append(TelemetryEvent(
 			event_type=event_type,
 			timestamp=event_timestamp,
 			description=event_description,
-			telemetry=match_telemet,
-			player=this_player
-		)
+			telemetry_id=match_telemet.id,
+			player_id=this_player.id
+		))
 
-		if save:
-			telemetry_event.save()
+		TelemetryEvent.objects.bulk_create(telemetry_events)

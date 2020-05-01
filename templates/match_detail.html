@@ -18,15 +18,15 @@
 					{
 						x: '{{- telemetry.x_cord -}}',
 						y: '{{- telemetry.y_cord -}}',
-							id: 'telem_{{- loop.index -}}'
+						id: 'telem_{{- loop.index -}}'
 					},
 				{%- endif -%}
 			{%- endfor -%}
 		];
-
-		const team_mate_data = [
-			{%- for team_data in telemetry_data.team_details -%}
-				['{{- team_data.player_name -}}', '{{- team_data.kills -}}', '{{- team_data.damage -}}'],
+        
+        const roster_data = [
+            {%- for roster in telemetry_data.rosters -%}
+				['{{- roster.roster_rank -}}', '{{- roster.participant_objects|safe -}}'],
 			{%- endfor -%}
 		];
 		
@@ -42,10 +42,10 @@
 			bLengthChange: true,
 		});
 
-		$('#team_datatable_datatable').DataTable({
-			data: team_mate_data,
+        $('#rosters_datatable').DataTable({
+			data: roster_data,
 			pageLength: 5,
-			order: [[1, "desc"]],
+			order: [[0, "asc"]],
 			scrollY: "200px",
 			scrollCollapse: true,
 			paging: false,
@@ -277,7 +277,7 @@
 
 </script>
 
-<div class="container">
+<div class="container" style='max-width: 1080px'>
 
 	<div class='row'>
 
@@ -324,7 +324,7 @@
 						{%- endfor -%}
 					</div>
 				</div>
-			</div>
+            </div>
 		</div>
 
 		<div class="col-md-6" style='height: 150px'>
@@ -345,26 +345,25 @@
 					</table>
 				</div>
 			</div>
-			<br>
-			<div class="card" id='match_detail_container'>
+            <br>
+            <div class="card">
 				<div class="card-header" style='text-align: center'>
-					Team Details
+					Leaderboard
 				</div>
 				<div class='card-body'>
-					<table class='table table-condensed hover' id='team_datatable_datatable' style='width: 100%'>
+					<table class='table table-condensed hover' id='rosters_datatable' style='width: 100%'>
 						<thead>
 							<tr>
-								<th width='33%'>Player name</th>
-								<th width='33%'>Kills</th>
-								<th width='33%'>Damage</th>
+								<th width='20%%'>Rank</th>
+								<th width='80%'>Team Details</th>
 							</tr>
 						</thead>
 						<tbody>
 						</tbody>
 					</table>
 				</div>
-			</div>
-			<br><br>
+            </div>
+            <br><br>
 		</div>
 
 	</div>

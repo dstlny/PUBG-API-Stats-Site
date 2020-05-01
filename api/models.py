@@ -128,8 +128,8 @@ class Telemetry(models.Model):
 
 class TelemetryEvent(models.Model):
     event_type = models.CharField(max_length=255)
-    timestamp = models.CharField(max_length=255)
-    description = models.CharField(max_length=255)
+    timestamp = models.CharField(max_length=255, null=True, blank=True)
+    description = models.CharField(max_length=1000)
     telemetry = models.ForeignKey('Telemetry', on_delete=models.CASCADE)
     player =  models.ForeignKey('Player', on_delete=models.CASCADE, blank=True, null=True)
     x_cord = models.FloatField(blank=True, null=True) 
