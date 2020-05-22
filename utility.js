@@ -1,42 +1,45 @@
 axios = require('axios')
 
-function checkStatus(log, answer, promise){
-
-	if(promise == true)
-		return new Promise((resolve, reject) => {
-			axios.get('http://127.0.0.1:8000/api/status')
-			.then(api_response => {
-				if(api_response.status == 200 && api_response.data.status == 'OK'){
-					if(log === true)
-						console.log(`Backend Django service up and running on port ${8000}!`)
-					if(answer === true)
-						resolve(false)
-				}
-			})
-			.catch(error => {
-				if(log === true)
-					console.log(`Seems Backend services are down...`)
-				if(answer === true)
-					resolve(true)
-			})
-		});
-	else
-		axios.get('http://127.0.0.1:8000/api/status')
-		.then(api_response => {
-			if(api_response.status == 200 && api_response.data.status == 'OK'){
-				if(log === true)
-					console.log(`Backend Django service up and running on port ${8000}!`)
-				if(answer === true)
-					return false
-			}
-		})
-		.catch(error => {
-			if(log === true)
-				console.log(`Seems Backend services are down...`)
-			if(answer === true)
-				return true
-		})
-		
+async function checkStatusPromise(){
+	return await axios.get('http://127.0.0.1:8000/api/status')
+	.then(api_response => {
+		if(api_response.status == 200 && api_response.data.status == 'OK'){
+			return true
+		} else {
+			return false
+		}
+	})
+	.catch(error => {
+		return false
+	})
 }
 
-exports.checkStatus = checkStatus
+function checkStatusLog(){
+	axios.get('http://127.0.0.1:8000/api/status')
+	.then(api_response => {
+		if(api_response.status == 200 && api_response.data.status == 'OK'){
+			console.log(`Backend Django service up and running on port ${8000}!`)
+		}
+	})
+	.catch(error => {
+		console.log(`Seems Backend services are down...`)
+	})
+}
+
+function checkStatusReturn(){
+	axios.get('http://127.0.0.1:8000/api/status')
+	.then(api_response => {
+		if(api_response.status == 200 && api_response.data.status == 'OK'){
+			return false
+		}
+	})
+	.catch(error => {
+		return true
+	})
+}
+
+module.exports = {
+	checkStatusPromise: checkStatusPromise,
+	checkStatusLog: checkStatusLog,
+	checkStatusReturn: checkStatusReturn
+}

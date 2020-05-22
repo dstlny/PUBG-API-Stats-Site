@@ -8,9 +8,10 @@ from api.models import *
 # other things
 from datetime import timedelta
 import os
+from django.db.models import Count
 
 class Command(BaseCommand):
-    help = 'Closes the specified poll for voting'
+    help = 'Deletes data older than 14 days.'
 
     def handle(self, *args, **options):
 
@@ -32,6 +33,27 @@ class Command(BaseCommand):
             match.delete()
 
         log_file.close()
+
+        purge_dupes()
+
+def purge_dupes():
+
+	duplicates = Match.objects.values(
+    	'api_id'
+    ).annotate(
+		api_id_count=Count('api_id')
+	).filter(api_id_count__gt=1)
+
+	matches = Match.objects.all()
+
+	for duplicate in duplicates:
+		api_id = duplicate['api_id']
+		dupes_match = matches.filter(api_id__iexact=api_id)
+		
+		earliest = dupes_match.earliest('id')
+		print('deleting earliest...')
+		earliest.delete()
+
 
 
 

@@ -1,5 +1,5 @@
 from django.db import models
-
+from jsonfield import JSONField
 
 class Map(models.Model):
     name = models.CharField(max_length=64)
@@ -10,7 +10,8 @@ class Map(models.Model):
         return "{} ({})".format(self.name, self.reference)
 
 class Match(models.Model):
-    api_id = models.CharField(max_length=255)
+    api_id = models.CharField(max_length=255, unique=True)
+    match_type = models.CharField(max_length=255, blank=True, null=True)
     created = models.DateTimeField()
     api_url = models.CharField(max_length=255)
     mode = models.CharField(max_length=255, blank=True, null=True)
@@ -33,8 +34,14 @@ class Participant(models.Model):
     player_name = models.CharField(max_length=255)
     damage = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     kills = models.IntegerField(blank=True, null=True)
+    knocks = models.IntegerField(blank=True, null=True)
     placement = models.IntegerField(blank=True, null=True)
     player = models.ForeignKey('Player', on_delete=models.CASCADE, blank=True, null=True)
+    is_ai = models.BooleanField(default=False, blank=True, null=True)
+
+    swim_distance = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    ride_distance = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    walk_distance = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
 
     def __str__(self):
         return "{} - {}".format(self.api_id, self.player_name)
@@ -144,3 +151,11 @@ class ItemTypeLookup(models.Model):
 
     def __str__(self):
         return f"{self.name}"
+
+class TelemetryRoster(models.Model):
+    json = JSONField()
+    telemetry = models.ForeignKey('Telemetry', on_delete=models.CASCADE, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.json}"
+

@@ -1,28 +1,82 @@
-let table;
-let retrieved = false
-let requested = true
-let no_matches = true
-let tries = 0;
-let down = false
+'use strict';
+
+var retrieved = false
+var requested = true
+var no_matches = true
+var tries = 0;
+var down = false
+var times_requested = 0
+var seen_match_ids = []
+var season_requested = false
+var table_rosters = {}
+var roster_table;
+var table; 
+
 
 $(document).ready(function() {
 
+	table = $('#results_datatable').DataTable({
+		data: [],
+		paging: true,
+		bFilter: true,
+		bLengthChange: true,
+		columns: [
+			{ 
+				className:'details-control',
+				orderable: false,
+				data: null,
+				defaultContent: '',
+			},
+			{ width: '10%' }, // map
+			{ width: '10%' }, // mode
+			{ width: '10%' }, // custom 
+			{ width: '10%', type: "datetime" }, // created
+			{ width: '10%' }, // placement
+			{ width: '40%' }, // details
+			{ width: '20%' }, // actions
+		],
+		pageLength: 25,
+		order: [[ 3, "desc" ]],
+		processing: true,
+		language: {
+			processing: '<i class="fa fa-spinner fa-spin fa-fw"></i><span class="sr-only">Loading...</span> ',
+			emptyTable: 'Please enter a players name and press the <i class="fa fa-search"></i> icon'
+		},
+	});
+
 	function hideInitial(){
 		$('#seasons_container').hide();
-		$("div.alert").remove();
-		destroyDataTable();
-		$('#results_datatable').DataTable({
-			'pageLength': 25,
-			"order": [[ 3, "asc" ]],
-			'language':{
-				emptyTable: 'Please enter a players name and press the <i class="fa fa-search"></i> icon'
-			}
-		});
+		$("#disconnected").hide();
+		$("#currently_processing").hide();
 	}
+
+	// Add event listener for opening and closing details
+	$(`#results_datatable tbody`).on('click', 'td.details-control', function () {
+		let tr = $(this).closest('tr');
+		let id = tr[0].id
+		let row = table.row(tr);
+
+		let returned_obj = format_child_row(id)
+		let datatable_id = returned_obj.datatable_id
+		let html = returned_obj.html
+
+		if (row.child.isShown()) {
+			row.child.hide();
+			tr.removeClass('shown');
+		} else {
+			row.child(html).show();
+			get_roster_for_match(id, datatable_id)
+			tr.addClass('shown');
+		}
+	});
 
 	hideInitial();
 
 	$(document).on('submit', 'form#search_form', function(event){
+
+		$("#season_stats_button").click(function() {
+			retrievePlayerSeasonStats()
+		});
 
 		event.preventDefault()
 
@@ -30,11 +84,61 @@ $(document).ready(function() {
 			hideInitial();
 		}
 
+		clearAll(window);
+		$('#seasons_container').hide();
 		callForm()
 
 	});
 
 });
+
+function get_roster_for_match(match_id, datatable_id){
+
+	let roster_table = $(`#${datatable_id}`).DataTable({
+		columns: [
+			{ width: '15%' }, // rank
+			{ width: '85%' }, // rosters
+		],
+		order: [[ 0, "asc" ]],
+		scrollY: "200px",
+        scrollCollapse: true,
+        paging: false
+	});
+
+	if(!table_rosters[datatable_id]){
+		table_rosters[datatable_id] = {
+			rosters: []
+		}
+	
+		$.ajax({
+			type: 'GET',
+			url: `/match_rosters/${match_id}/`,
+			async: true,
+			success: function (data, status, xhr) {
+				let rosters = data.rosters
+				let i;
+				let len;
+				for (i = 0, len=rosters.length; i < len; i++){
+					table_rosters[datatable_id].rosters.push(rosters[i])
+					roster_table.row.add([
+						rosters[i].roster_rank,
+						rosters[i].participant_objects,
+					]).draw(false)
+				}
+			}
+		});
+	} else {
+		let rosters_for_datatable = table_rosters[datatable_id].rosters
+		let i;
+		let len;
+		for (i = 0, len=rosters_for_datatable.length; i < len; i++){
+			roster_table.row.add([
+				rosters_for_datatable[i].roster_rank,
+				rosters_for_datatable[i].participant_objects,
+			]).draw(false)
+		}
+	}
+}
 
 function clearAll(windowObject) {
 	let id = Math.max(
@@ -50,128 +154,138 @@ function clearAll(windowObject) {
 	function noop(){}
 }
 
-function seasonStatsHasShown(){
-	return $('#tpp_row').is(':visible') || $('#fpp_row').is(':visible')
+function format_child_row(id) {
+	// `d` is the original data object for the row
+	let generated_datatable_id = `rosters_datatable_${id}`
+
+	let generated_row_data =`
+		<div class="col-md-12" style='padding: 10px;' id='${generated_datatable_id}_wrapper'>
+			<div class="tab-pane fade show active" id="leaderboard" role="tabpanel" aria-labelledby="nav-home-tab">
+				<table class='table table-condensed hover' id='${generated_datatable_id}' style='width: 100%'>
+					<thead>
+						<tr>
+							<th width='20%%'>Rank</th>
+							<th width='80%'>Team Details</th>
+						</tr>
+					</thead>
+					<tbody>
+					</tbody>
+				</table>
+			</div>
+		</div>`
+
+	let obj = {
+		datatable_id: generated_datatable_id,
+		html: generated_row_data
+	}
+
+  	return obj
+}
+
+function getResults(){
+
+	var data = {
+		player_id: document.getElementById('player_id').value,
+		platform: document.getElementById('id_platform').value,
+		game_mode: document.getElementById('id_game_mode').value,
+		perspective: document.getElementById('id_perspective').value,
+		times_requested: times_requested,
+		seen_match_ids: seen_match_ids
+	}
+
+	$.ajax({
+		url: $("#retrieve_matches")[0].value,
+		async: true,
+		type:'POST',
+		data: data,
+		success: function(result){
+			if(result.data){
+				let i;
+				let match_id;
+				let len;
+				document.getElementById('player_id').value = result.player_id
+				for (i = 0, len=result.data.length; i < len; i++){
+					match_id = result.data[i].id
+					if(!seen_match_ids.includes(match_id)){
+						seen_match_ids.push(match_id)
+						let row_node = table.row.add([
+							'',
+							result.data[i].map,
+							result.data[i].mode,
+							result.data[i].custom_match,
+							result.data[i].date_created,
+							result.data[i].team_placement,
+							result.data[i].team_details,
+							result.data[i].actions
+						]).node();
+						$(row_node).attr("id", match_id);
+					}
+				}
+				table.draw(false)
+				times_requested += 1
+				no_matches = false
+				$('#seasons_container').show();
+				$("#currently_processing").hide()
+			}
+		},
+		error: function(xhr, error, code){
+			tries += 1
+			no_matches = true
+			if(tries > 6){
+				$("#disconnected").show()
+			}
+			checkDown()
+		}
+	});
+	
 }
 
 function loadResultsDataTable(){
 
-	$("div.alert").remove();
-	$('#datatable_container').show();
+	getResults()
 
-	table = $('#results_datatable').DataTable({
-		ajax: {
-			url: $("#retrieve_matches")[0].value,
-			type: 'POST',
-			data: {
-				player_id: document.getElementById('player_id').value,
-				platform: document.getElementById('id_platform').value,
-				game_mode: document.getElementById('id_game_mode').value,
-				perspective: document.getElementById('id_perspective').value,
-			},
-			async: true,
-			dataSrc: function(data){
-				if(typeof data.message !== 'undefined' && data.message !== undefined || typeof data.data !== 'undefined' && data.data !== undefined){
-					showMessages(data)
-					requested = true
-					no_matches = false
-					return data.data
-				} else if(typeof data.error !== 'undefined' && data.error !== undefined){
-					showMessages(data)
-					requested = false
-					no_matches = true
-					return []
-				}
-			},
-			error: function (xhr, error, code){
-				tries += 1.
+	setInterval(function() {
+		getResults()
+	}, 20000);
 
-				if(tries > 6){
-					showMessages({
-						error: 'Connection has timed out. This has been logged.'
-					})
-				}
-				checkDown()
-            }
-		},
-		paging: true,
-		bFilter: true,
-		bLengthChange: true,
-		columns: [
-			{ width: '8%', data: "map" },
-			{ width: '8%', data: "mode" },
-			{ width: '8%', data: 'custom_match' },
-			{ width: '10%', data: "date_created", type: "datetime" },
-			{ width: '10%', data: "team_placement" },
-			{ width: '40%', data: "team_details" },
-			{ width: '10%', data: "actions" },
-		],
-		pageLength: 25,
-		order: [[ 3, "desc" ]],
-		processing: true,
-		language: {
-			processing: '<i class="fa fa-spinner fa-spin fa-fw"></i><span class="sr-only">Loading...</span> '
-		},
-	});
-
-	if(requested && table !== undefined){
-		ajax_interv = setInterval(function() {
-			table.ajax.reload(null, false);
-		}, 5000);
-	}
-	
-	if(!seasonStatsHasShown() && requested && !down){
-		retrievePlayerSeasonStats()
-   	}
+	seasonStatToggle(document.getElementById('id_perspective').value)
 
 }
 
-function showMessages(data){
-	$("div.alert").remove();
-	let messages = document.getElementById("messages")
-	if(data.message){
-		let message_html = `<div class="alert alert-success" role="alert">
-		<i class="fa fa-check"></i>&nbsp;&nbsp;${data.message}
-		</div>`
-		messages.innerHTML += message_html
-	}
-	if(data.error){
-		let error_html = `<div class="alert alert-warning" role="alert">
-			<i class="fa fa-exclamation-triangle"></i>&nbsp;&nbsp;${data.error}
-		</div>`
-		messages.innerHTML += error_html
-	}
-}
-
-function destroyDataTable(){
-	$('#results_datatable').DataTable().destroy();
-	$('#results_datatable tbody').empty();
-}
 
 function callForm(){
-	clearAll(window);
-	$("div.alert").remove();
-	destroyDataTable();
-	$('#seasons_container').hide();
-
 	let form_data = $('#search_form').serialize();
 
-	player_name = document.getElementById("id_player_name").value
+	let player_name = document.getElementById("id_player_name").value
 
 	if(player_name !== undefined && typeof player_name !== 'undefined'){
-		last_player_name = document.getElementById('player_name').value
+		let last_player_name = document.getElementById('player_name').value
 		if(last_player_name !== undefined && typeof last_player_name !== 'undefined'){
 			if(player_name.trim() == last_player_name.trim()){
 				retrieved = true
+				if(season_requested)
+					season_requested = true
+				else
+					season_requested = false
 			} else {
 				retrieved = false
+				season_requested = false
+				$('#results_datatable').DataTable().clear().draw();
+				seen_match_ids = []
+				table_rosters = {}
+				clearSeasonStats()
 			}
 		} else {
 			retrieved = false
+			season_requested = false
+			$('#results_datatable').DataTable().clear().draw();
+			seen_match_ids = []
+			table_rosters = {}
+			clearSeasonStats()
 		}
 	}
-	
-	$.fn.dataTable.ext.errMode = 'error';
+
+	times_requested = 0
 
 	$.ajax({
 		data: form_data,
@@ -179,19 +293,24 @@ function callForm(){
 		url: $('#search_form').attr('action'),
 		async: true,
 		success: function (data, status, xhr) {
-			
-			if(data.error == undefined){
-				if(data.player_id){
-					document.getElementById('player_id').value = data.player_id
-				}
-				if(data.player_name){
-					document.getElementById('player_name').value = data.player_name
-				}
+			if(data.player_id){
+				document.getElementById('player_id').value = data.player_id
+			}
+			if(data.player_name){
+				document.getElementById('player_name').value = data.player_name
+			}
+			if(!data.currently_processing || !data.error){
 				loadResultsDataTable();	
 			} else {
-				showMessages(data)
-				$('#seasons_container').hide();
-				$('#datatable_container').hide();
+				if(data.error){
+					$("#currently_processing").hide()
+					$("#error").show()
+					$("#error_message").text(data.error);
+				} else {
+					$("#error").hide()
+					$("#currently_processing").show()
+					setTimeout("loadResultsDataTable()", 20000);
+				}
 			}
 		}     
 	});
@@ -231,15 +350,77 @@ function checkDown(){
 	});
 }
 
+function clearSeasonStats(){
+	document.getElementById('duo_season_matches').innerHTML = ''
+	document.getElementById('duo_season_damage__figure').innerHTML = ''
+	document.getElementById('duo_season_damage__text').innerHTML = ''
+	document.getElementById('duo_season_headshots__figure').innerHTML = ''
+	document.getElementById('duo_season_headshots__text').innerHTML = ''
+	document.getElementById('duo_season_kills__figure').innerHTML = ''
+	document.getElementById('duo_season_kills__text').innerHTML = ''
+	document.getElementById('duo_season_longest_kill__figure').innerHTML = ''
+	document.getElementById('duo_season_longest_kill__text').innerHTML = ''
+	document.getElementById('duo_fpp_season_stats').innerHTML = ''
+	document.getElementById('duo_fpp_season_matches').innerHTML = ''
+	document.getElementById('duo_fpp_season_damage__figure').innerHTML = ''
+	document.getElementById('duo_fpp_season_damage__text').innerHTML = ''
+	document.getElementById('duo_fpp_season_headshots__figure').innerHTML = ''
+	document.getElementById('duo_fpp_season_headshots__text').innerHTML = ''
+	document.getElementById('duo_fpp_season_kills__figure').innerHTML = ''
+	document.getElementById('duo_fpp_season_kills__text').innerHTML = ''
+	document.getElementById('duo_fpp_season_longest_kill__figure').innerHTML = ''
+	document.getElementById('duo_fpp_season_longest_kill__text').innerHTML = ''
+	document.getElementById('solo_fpp_season_stats').innerHTML = ''
+	document.getElementById('solo_fpp_season_matches').innerHTML = ''
+	document.getElementById('solo_fpp_season_damage__figure').innerHTML = ''
+	document.getElementById('solo_fpp_season_damage__text').innerHTML = ''
+	document.getElementById('solo_fpp_season_headshots__figure').innerHTML = ''
+	document.getElementById('solo_fpp_season_headshots__text').innerHTML = ''
+	document.getElementById('solo_fpp_season_kills__figure').innerHTML = ''
+	document.getElementById('solo_fpp_season_kills__text').innerHTML = ''
+	document.getElementById('solo_fpp_season_longest_kill__figure').innerHTML = ''
+	document.getElementById('solo_fpp_season_longest_kill__text').innerHTML = ''
+	document.getElementById('solo_season_stats').innerHTML = ''
+	document.getElementById('solo_season_matches').innerHTML = ''
+	document.getElementById('solo_season_damage__figure').innerHTML = ''
+	document.getElementById('solo_season_damage__text').innerHTML = ''
+	document.getElementById('solo_season_headshots__figure').innerHTML = ''
+	document.getElementById('solo_season_headshots__text').innerHTML = ''
+	document.getElementById('solo_season_kills__figure').innerHTML = ''
+	document.getElementById('solo_season_kills__text').innerHTML = ''
+	document.getElementById('solo_season_longest_kill__figure').innerHTML = ''
+	document.getElementById('solo_season_longest_kill__text').innerHTML = ''
+	document.getElementById('squad_season_stats').innerHTML = ''
+	document.getElementById('squad_season_matches').innerHTML = ''
+	document.getElementById('squad_season_damage__figure').innerHTML = ''
+	document.getElementById('squad_season_damage__text').innerHTML = ''
+	document.getElementById('squad_season_headshots__figure').innerHTML = ''
+	document.getElementById('squad_season_headshots__text').innerHTML = ''
+	document.getElementById('squad_season_kills__figure').innerHTML = ''
+	document.getElementById('squad_season_kills__text').innerHTML = ''
+	document.getElementById('squad_season_longest_kill__figure').innerHTML = ''
+	document.getElementById('squad_season_longest_kill__text').innerHTML = ''
+	document.getElementById('squad_fpp_season_stats').innerHTML = ''.toUpperCase()
+	document.getElementById('squad_fpp_season_matches').innerHTML = ''
+	document.getElementById('squad_fpp_season_damage__figure').innerHTML = ''
+	document.getElementById('squad_fpp_season_damage__text').innerHTML = ''
+	document.getElementById('squad_fpp_season_headshots__figure').innerHTML = ''
+	document.getElementById('squad_fpp_season_headshots__text').innerHTML = ''
+	document.getElementById('squad_fpp_season_kills__figure').innerHTML = ''
+	document.getElementById('squad_fpp_season_kills__text').innerHTML = ''
+	document.getElementById('squad_fpp_season_longest_kill__figure').innerHTML = ''
+	document.getElementById('squad_fpp_season_longest_kill__text').innerHTML = ''
+}
+
 function retrievePlayerSeasonStats(){
 	let api_id = document.getElementById('player_id').value
 	let platform = document.getElementById('id_platform').value
 	let perspective = document.getElementById('id_perspective').value
 	let season_endpoint = document.getElementById('season_stats_endpoint').value
 
-	extra_elems = []
+	if(!season_requested){
 
-	if(!no_matches || !retrieved){
+		$("#season_stats").LoadingOverlay("show");
 
 		$.ajax({
 			data: {
@@ -249,31 +430,99 @@ function retrievePlayerSeasonStats(){
 			},
 			type: 'POST',
 			url: season_endpoint,
+			async: true,
 			success: function (data, status, xhr) {
-				data.forEach(function(arrayItem) {
-					Object.entries(arrayItem).forEach(([key, val]) => {
-						for(let entry in val){
-							let element = document.getElementById(entry)
-							
-							if(entry.includes('season_stats')){
-								extra_elems.push(`${entry}_container`)
-							}
+				season_requested = true
+				let len;
+				for (let i = 0, len=data.length; i < len; i++){
+					let row = data[i]
 
-							element.innerHTML = `${val[entry]}`
-						}
-					});
-				});
-				$('#seasons_container').show();
-				retrieved = true
+					if(row.duo_season_stats){
+						let duo_season_stats = row.duo_season_stats
+						document.getElementById('duo_season_stats').innerHTML = duo_season_stats.duo_season_stats.toUpperCase()
+						document.getElementById('duo_season_matches').innerHTML = duo_season_stats.duo_season_matches
+						document.getElementById('duo_season_damage__figure').innerHTML = duo_season_stats.duo_season_damage__figure
+						document.getElementById('duo_season_damage__text').innerHTML = duo_season_stats.duo_season_damage__text
+						document.getElementById('duo_season_headshots__figure').innerHTML = duo_season_stats.duo_season_headshots__figure
+						document.getElementById('duo_season_headshots__text').innerHTML = duo_season_stats.duo_season_headshots__text
+						document.getElementById('duo_season_kills__figure').innerHTML = duo_season_stats.duo_season_kills__figure
+						document.getElementById('duo_season_kills__text').innerHTML = duo_season_stats.duo_season_kills__text
+						document.getElementById('duo_season_longest_kill__figure').innerHTML = duo_season_stats.duo_season_longest_kill__figure
+						document.getElementById('duo_season_longest_kill__text').innerHTML = duo_season_stats.duo_season_longest_kill__text
+					}
+					if(row.duo_fpp_season_stats){
+						let duo_fpp_season_stats = row.duo_fpp_season_stats
+						document.getElementById('duo_fpp_season_stats').innerHTML = duo_fpp_season_stats.duo_fpp_season_stats.toUpperCase()
+						document.getElementById('duo_fpp_season_matches').innerHTML = duo_fpp_season_stats.duo_fpp_season_matches
+						document.getElementById('duo_fpp_season_damage__figure').innerHTML = duo_fpp_season_stats.duo_fpp_season_damage__figure
+						document.getElementById('duo_fpp_season_damage__text').innerHTML = duo_fpp_season_stats.duo_fpp_season_damage__text
+						document.getElementById('duo_fpp_season_headshots__figure').innerHTML = duo_fpp_season_stats.duo_fpp_season_headshots__figure
+						document.getElementById('duo_fpp_season_headshots__text').innerHTML = duo_fpp_season_stats.duo_fpp_season_headshots__text
+						document.getElementById('duo_fpp_season_kills__figure').innerHTML = duo_fpp_season_stats.duo_fpp_season_kills__figure
+						document.getElementById('duo_fpp_season_kills__text').innerHTML = duo_fpp_season_stats.duo_fpp_season_kills__text
+						document.getElementById('duo_fpp_season_longest_kill__figure').innerHTML = duo_fpp_season_stats.duo_fpp_season_longest_kill__figure
+						document.getElementById('duo_fpp_season_longest_kill__text').innerHTML = duo_fpp_season_stats.duo_fpp_season_longest_kill__text
+					}
+					if(row.solo_fpp_season_stats){
+						let solo_fpp_season_stats = row.solo_fpp_season_stats
+						document.getElementById('solo_fpp_season_stats').innerHTML = solo_fpp_season_stats.solo_fpp_season_stats.toUpperCase()
+						document.getElementById('solo_fpp_season_matches').innerHTML = solo_fpp_season_stats.solo_fpp_season_matches
+						document.getElementById('solo_fpp_season_damage__figure').innerHTML = solo_fpp_season_stats.solo_fpp_season_damage__figure
+						document.getElementById('solo_fpp_season_damage__text').innerHTML = solo_fpp_season_stats.solo_fpp_season_damage__text
+						document.getElementById('solo_fpp_season_headshots__figure').innerHTML = solo_fpp_season_stats.solo_fpp_season_headshots__figure
+						document.getElementById('solo_fpp_season_headshots__text').innerHTML = solo_fpp_season_stats.solo_fpp_season_headshots__text
+						document.getElementById('solo_fpp_season_kills__figure').innerHTML = solo_fpp_season_stats.solo_fpp_season_kills__figure
+						document.getElementById('solo_fpp_season_kills__text').innerHTML = solo_fpp_season_stats.solo_fpp_season_kills__text
+						document.getElementById('solo_fpp_season_longest_kill__figure').innerHTML = solo_fpp_season_stats.solo_fpp_season_longest_kill__figure
+						document.getElementById('solo_fpp_season_longest_kill__text').innerHTML = solo_fpp_season_stats.solo_fpp_season_longest_kill__text
+					}
+					if(row.solo_season_stats){
+						let solo_season_stats = row.solo_season_stats
+						document.getElementById('solo_season_stats').innerHTML = solo_season_stats.solo_season_stats.toUpperCase()
+						document.getElementById('solo_season_matches').innerHTML = solo_season_stats.solo_season_matches
+						document.getElementById('solo_season_damage__figure').innerHTML = solo_season_stats.solo_season_damage__figure
+						document.getElementById('solo_season_damage__text').innerHTML = solo_season_stats.solo_season_damage__text
+						document.getElementById('solo_season_headshots__figure').innerHTML = solo_season_stats.solo_season_headshots__figure
+						document.getElementById('solo_season_headshots__text').innerHTML = solo_season_stats.solo_season_headshots__text
+						document.getElementById('solo_season_kills__figure').innerHTML = solo_season_stats.solo_season_kills__figure
+						document.getElementById('solo_season_kills__text').innerHTML = solo_season_stats.solo_season_kills__text
+						document.getElementById('solo_season_longest_kill__figure').innerHTML = solo_season_stats.solo_season_longest_kill__figure
+						document.getElementById('solo_season_longest_kill__text').innerHTML = solo_season_stats.solo_season_longest_kill__text
+					}
+					if(row.squad_season_stats){
+						let squad_season_stats = row.squad_season_stats
+						document.getElementById('squad_season_stats').innerHTML = squad_season_stats.squad_season_stats.toUpperCase()
+						document.getElementById('squad_season_matches').innerHTML = squad_season_stats.squad_season_matches
+						document.getElementById('squad_season_damage__figure').innerHTML = squad_season_stats.squad_season_damage__figure
+						document.getElementById('squad_season_damage__text').innerHTML = squad_season_stats.squad_season_damage__text
+						document.getElementById('squad_season_headshots__figure').innerHTML = squad_season_stats.squad_season_headshots__figure
+						document.getElementById('squad_season_headshots__text').innerHTML = squad_season_stats.squad_season_headshots__text
+						document.getElementById('squad_season_kills__figure').innerHTML = squad_season_stats.squad_season_kills__figure
+						document.getElementById('squad_season_kills__text').innerHTML = squad_season_stats.squad_season_kills__text
+						document.getElementById('squad_season_longest_kill__figure').innerHTML = squad_season_stats.squad_season_longest_kill__figure
+						document.getElementById('squad_season_longest_kill__text').innerHTML = squad_season_stats.squad_season_longest_kill__text
+					}
+					if(row.squad_fpp_season_stats){
+						let squad_fpp_season_stats = row.squad_fpp_season_stats
+						document.getElementById('squad_fpp_season_stats').innerHTML = squad_fpp_season_stats.squad_fpp_season_stats.toUpperCase()
+						document.getElementById('squad_fpp_season_matches').innerHTML = squad_fpp_season_stats.squad_fpp_season_matches
+						document.getElementById('squad_fpp_season_damage__figure').innerHTML = squad_fpp_season_stats.squad_fpp_season_damage__figure
+						document.getElementById('squad_fpp_season_damage__text').innerHTML = squad_fpp_season_stats.squad_fpp_season_damage__text
+						document.getElementById('squad_fpp_season_headshots__figure').innerHTML = squad_fpp_season_stats.squad_fpp_season_headshots__figure
+						document.getElementById('squad_fpp_season_headshots__text').innerHTML = squad_fpp_season_stats.squad_fpp_season_headshots__text
+						document.getElementById('squad_fpp_season_kills__figure').innerHTML = squad_fpp_season_stats.squad_fpp_season_kills__figure
+						document.getElementById('squad_fpp_season_kills__text').innerHTML = squad_fpp_season_stats.squad_fpp_season_kills__text
+						document.getElementById('squad_fpp_season_longest_kill__figure').innerHTML = squad_fpp_season_stats.squad_fpp_season_longest_kill__figure
+						document.getElementById('squad_fpp_season_longest_kill__text').innerHTML = squad_fpp_season_stats.squad_fpp_season_longest_kill__text
+					}
 
-				for(let element in extra_elems){
-					$(element).show()
 				}
 
-				seasonStatToggle(perspective)
+				$("#season_stats").LoadingOverlay("hide", true);
+				$('#seasons_container').show();
+				
 			}
 		});
 
 	}
-
 }

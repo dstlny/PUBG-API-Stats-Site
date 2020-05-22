@@ -2,7 +2,17 @@
 
 {% block body %}
 
-	<div class="card"  style='border-bottom: 0px'>
+	<style>
+		td.details-control {
+			background: url('https://www.datatables.net/examples/resources/details_open.png') no-repeat center center;
+			cursor: pointer;
+		}
+		tr.shown td.details-control {
+			background: url('https://www.datatables.net/examples/resources/details_close.png') no-repeat center center;
+		}
+	</style>
+
+	<div class="card">
 		<div class='card-header' style="text-align: center">
 			Welcome!
 		</div>
@@ -20,29 +30,21 @@
 			<input type="hidden" id="retrieve_matches" value="/retrieve_matches">
 		</div>
 	</div>
-	<div class="card" style='border-top: 0px;'>
-		<div class="card-body" id='messages'>
-
-		</div>
-	</div>
 
 	<br>
-	<div class="card accordion" id='seasons_container' style='border: 0px;'>
+	<div class="card accordion" id='seasons_container'>
 			
-		<div class='card-header'>
-			<button type="button btn-primary btn-block" data-toggle="collapse" data-target="#season_stats" aria-expanded="true" aria-controls="season_stats">
-				Show/Hide Season Stats
-			</button>
+		<div class='card-header' id="season_stats_button" data-toggle="collapse" data-target="#season_stats" aria-expanded="true" aria-controls="season_stats">
+			Show/Hide Season Stats
 		</div>
 
-		<div class="card-body collapse" style='margin: 0px; padding-left: 0px; padding-right: 0px' id="season_stats">
-			<div class='row' id='fpp_row'>
+		<div class="card-body collapse" id="season_stats">
+			<div class='row' id='fpp_row' style='margin-bottom: 10px'>
 				{% include "includes/solo_fpp_season_stats.html" %}
 				{% include "includes/duo_fpp_season_stats.html" %}
 				{% include "includes/squad_fpp_season_stats.html" %}
 			</div>
-			<br>
-			<div class="row" id='tpp_row'>
+			<div class="row" id='tpp_row'style='margin-top: 10px'>
 				{% include "includes/solo_season_stats.html" %}
 				{% include "includes/duo_season_stats.html" %}
 				{% include "includes/squad_season_stats.html" %}
@@ -50,6 +52,7 @@
 		</div>
 
 	</div>
+
 	<br>
 
 	<div class="card accordion" id='datatable_container'>
@@ -64,12 +67,13 @@
 			<table class='table table-condensed hover' id='results_datatable'  style="width:100%">
 				<thead>
 					<tr>
-						<th width='10%'>Map</th>
-						<th width='10%'>Mode</th>
-						<th width='16%'>Custom</th>
-						<th width='15%'>Created</th>
-						<th width='18%'>Placement</th>
-						<th width='40%'>Details</th>
+						<th width='8'></th>
+						<th width='8%'>Map</th>
+						<th width='8%'>Mode</th>
+						<th width='8%'>Custom</th>
+						<th width='8%'>Created</th>
+						<th width='8%'>Placement</th>
+						<th width='60%'>Details</th>
 						<th width='10%'>Actions</th>
 					</tr>
 				</thead>

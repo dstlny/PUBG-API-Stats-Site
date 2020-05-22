@@ -7,24 +7,56 @@
 		<!-- Required meta tags -->
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+		<base href="http://127.0.0.1:7009/">
 		
 		<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-		<link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css" integrity="sha256-h20CPZ0QyXlBuAw7A+KluUYx/3pK+c7lYEpqLTlxjYQ=" crossorigin="anonymous" />
 		<link rel="stylesheet" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.min.css">
 
 		<script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
 		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
 		<script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
-		<script src="static/js/functions.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/gasparesganga-jquery-loading-overlay@2.1.7/dist/loadingoverlay.min.js"></script>
+		
+		{% block functions %}
+			<script src="static/js/functions.js"></script>
+		{% endblock %}
 
+		<div id='messages' style='margin: 0px; padding: 0px;'>
+			<div class="alert alert-warning alert-dismissible fade show" style='margin: 0px; display: none;' role="alert" id='currently_processing'>
+				<strong>
+					Currently processing player....
+				</strong>
+				<button type="button" class="close" data-dismiss="alert" aria-label="Close" >
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div class="alert alert-warning alert-dismissible fade show" style='margin: 0px; display: none;' role="alert" id='error'>
+				<strong id='error_message'>
+					Sorry, player does not exist....
+				</strong>
+				<button type="button" class="close" data-dismiss="alert" aria-label="Close" >
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div class="alert alert-warning alert-dismissible fade show" style='margin: 0px; display: none;' role="alert" id='disconnected'>
+				<strong>
+					Connection has timed out....
+				</strong>
+				<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+		</div>
 		<nav class="navbar fixed-top navbar-dark nav-fill" style="background-color: #333!important; color:#fff;  position:relative; margin-bottom: 10px">
-			<a class="navbar-brand">
+			<a class="navbar-brand" href='/'>
 				PUBG API Wrapper
 			</a>
 		</nav>
 	</head>
 	<body>
-		<div class="container" style='max-width: 1400px'>
+		<div class="container" style='max-width: 1400px' id='base_container'>
 			<div class="col-md-12">
 				{% block body %}
 				

@@ -1,44 +1,42 @@
 axios = require('axios')
 
 module.exports = function (fastify, opts, done) {
-    
-    fastify.post('/search', async(req, res) => {
-        player_name = req.body.player_name
-        platform = req.body.platform
-        perspective = req.body.perspective
-        game_mode = req.body.game_mode
+	
+	fastify.post('/search', async(req, res) => {
 
-        player_obj = {
-            player_name: player_name,
-            game_mode: game_mode,
-            perspective: perspective,
-            platform: platform
-        }
+		let player_obj = {
+			player_name:  req.body.player_name,
+			game_mode: req.body.game_mode,
+			perspective: req.body.perspective,
+			platform: req.body.platform
+		}
 
-        let api_response = await axios.post('http://127.0.0.1:8000/api/search', player_obj)
+		let api_response = await axios.post('http://127.0.0.1:8000/api/search', player_obj)
 
-        if(api_response.status == 200){
-            error = api_response.data.error
-            player_id = api_response.data.player_id
-            player_name = api_response.data.player_name
+		if(api_response.status == 200){
 
-            if(error !== undefined){
-                return res.send({
-                    error: error,
-                    player_id: null
-                })
-            } else {
-                if(player_id !== undefined){
-                    return res.send({
-                        player_id: player_id,
-                        player_name: player_name
-                    })
-                }
-            }
-        } else { 
-            console.error(api_response)
-        }
-    })
+			let error = api_response.data.error
+			let player_id = api_response.data.player_id
+			let currently_processing = api_response.data.currently_processing
 
-    done()
+			if(error !== undefined){
+				return res.send({
+					error: error,
+					player_id: null
+				})
+			} else {
+				if(player_id !== undefined){
+					return res.send({
+						player_id: player_id,
+						player_name: api_response.data.player_name,
+						currently_processing:currently_processing
+					})
+				}
+			}
+		} else { 
+			console.error(api_response)
+		}
+	})
+
+	done()
 }

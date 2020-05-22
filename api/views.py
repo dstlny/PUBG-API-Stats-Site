@@ -7,7 +7,7 @@ from api.settings import API_HEADER
 from api.functions import (
 	build_url, build_lifetime_url, make_request, correct_perspective, correct_mode,
 	build_player_url, get_player_matches, retrieve_player_season_stats, populate_seasons, build_player_account_id_url,
-	make_request, build_match_url, get_match_telemetry_from_match
+	make_request, build_match_url, get_match_telemetry_from_match, get_match_data, create_leaderboard_for_match
 )
 
 from api.models import *
@@ -23,11 +23,6 @@ try:
 except:
 	import json
 
-from threading import Thread, Timer
-import multiprocessing
-
-from django.views.decorators.cache import cache_page
-from django.views.decorators.vary import vary_on_headers
 from django.core.cache import cache
 from django.shortcuts import get_object_or_404
 
@@ -39,101 +34,101 @@ from dateutil.parser import parse
 import ast
 from django.db.models import Q
 
+import multiprocessing
+
+from django.utils.timesince import timesince
+
+pool_processes = int((multiprocessing.cpu_count() * 2) + 1) // 2
+pool = multiprocessing.Pool(pool_processes)
+
 @api_view(['GET'])
 def status(request):
 	return Response({
 		'status': 'OK'
 	})
 
-@api_view(['GET', 'POST'])
+@api_view(['POST'])
 def search(request):
-
-	if request.method == 'POST':
-
-		body = request.data
-
-		player_name = body.get('player_name', None)
-
-		perspective = body.get('perspective', None)
-		game_mode = body.get('game_mode', None)
-		platform = body.get('platform', None)
-
-		player_platform_url_cache_key = '{}_{}_platform_url'.format(player_name, platform)
-		player_player_url_cache_key = '{}_{}_player_url'.format(player_name, platform)
-		player_player_response_cache_key = '{}_{}_player_response'.format(player_name, platform)
-		cached_platform_url = cache.get(player_platform_url_cache_key, None)
-
-		if not cached_platform_url:
-			platform_url = build_url(platform)
-			cache.set(player_platform_url_cache_key, platform_url, 60)
-		else:
-			platform_url = cached_platform_url
-
-		cached_player_url = cache.get(player_player_url_cache_key, None)
-
-		if not cached_player_url:
-			player_url = build_player_url(base_url=platform_url, player_name=player_name)
-			cache.set(player_player_url_cache_key, player_url, 60)
-		else:
-			player_url = cached_player_url
-
-		cached_player_response = cache.get(player_player_response_cache_key, None)
-
-		if not cached_player_response or 'data' not in cached_player_response:
-			player_response = make_request(player_url)
-
-			if 'data' not in player_response:
-				potential_current_player = Participant.objects.filter(player_name=player_name)
-				if potential_current_player.exists():
-					potential_current_player = potential_current_player.first()
-					player_url = potential_current_player.player.api_url
-					player_response = make_request(player_url)
-					
-			cache.set(player_player_response_cache_key, player_response, 120)
-		else:
-			player_response = cached_player_response
-
-		ajax_data = {}
-
-		if 'data' in player_response:
-
-			if isinstance(player_response['data'], list):
-				player_id = player_response['data'][0]['id']
-			else:
-				player_id = player_response['data']['id']
-
-			ajax_data['player_id'] = player_id
-			ajax_data['player_name']  = player_name
-
-			perspective = correct_perspective(perspective)
-			game_mode = correct_mode(game_mode)
-
-			pool = multiprocessing.Pool(processes=1)
-			print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{} - {}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'.format(player_name, player_id))
-			pool.apply_async(get_player_matches, (platform_url, player_response, perspective, game_mode))
-
-			season_cache = '{}_season_data'.format(player_id)
-			cached_season_data = cache.get(season_cache, None)
-			
-			if not cached_season_data:
-
-				pool._processes = 2
-				pool._repopulate_pool()
-				pool.apply_async(retrieve_player_season_stats, (player_id,  platform))
-			
-			pool.close()
-
-		else:
-
-			error = 'Sorry, looks like this player does not exist.'
-			ajax_data['error'] = error
-
-		return Response(ajax_data)
-
-@api_view(['GET', 'POST'])
-def retrieve_matches(request):
-
+	
 	start_time = time.time()
+
+	body = request.data
+
+	player_name = body.get('player_name', None)
+
+	perspective = body.get('perspective', None)
+	game_mode = body.get('game_mode', None)
+	platform = body.get('platform', None)
+
+	player_platform_url_cache_key = '{}_{}_platform_url'.format(player_name, platform)
+	player_player_url_cache_key = '{}_{}_player_url'.format(player_name, platform)
+	player_player_response_cache_key = '{}_{}_player_response'.format(player_name, platform)
+
+	cached_platform_url = cache.get(player_platform_url_cache_key, None)
+
+	if not cached_platform_url:
+		platform_url = build_url(platform)
+		cache.set(player_platform_url_cache_key, platform_url, 60)
+	else:
+		platform_url = cached_platform_url
+
+	cached_player_url = cache.get(player_player_url_cache_key, None)
+
+	if not cached_player_url:
+		player_url = build_player_url(base_url=platform_url, player_name=player_name)
+		cache.set(player_player_url_cache_key, player_url, 60)
+	else:
+		player_url = cached_player_url
+
+	cached_player_response = cache.get(player_player_response_cache_key, None)
+
+	if not cached_player_response or 'data' not in cached_player_response:
+		player_response = make_request(player_url)
+
+		if 'data' not in player_response:
+			potential_current_player = Participant.objects.filter(player_name=player_name)
+			if potential_current_player.exists():
+				potential_current_player = potential_current_player.first()
+				player_url = potential_current_player.player.api_url
+				player_response = make_request(player_url)
+				
+		cache.set(player_player_response_cache_key, player_response, 120)
+	else:
+		player_response = cached_player_response
+
+	ajax_data = {}
+
+	if 'data' in player_response:
+
+		if isinstance(player_response['data'], list):
+			player_id = player_response['data'][0]['id']
+		else:
+			player_id = player_response['data']['id']
+
+		player_currently_processing_cache_key = '{}_{}_current_processing'.format(player_id, platform)
+		currently_processing = cache.get(player_currently_processing_cache_key, None)
+
+		ajax_data['player_id'] = player_id
+		ajax_data['player_name']  = player_name
+
+		if not currently_processing:
+			cache.set(player_currently_processing_cache_key, True, 60)
+			ajax_data['currently_processing'] = True
+			pool.apply_async(get_player_matches, (platform_url, player_response))
+		else:
+			ajax_data['currently_processing'] = False
+
+	else:
+
+		error = 'Sorry, looks like this player does not exist.'
+		ajax_data['error'] = error
+
+	print("took {:0.4f}(s)".format(time.time() - start_time))
+
+	return Response(ajax_data)
+
+@api_view(['POST'])
+def retrieve_matches(request):
 
 	request_again = False
 	redo_cache = False
@@ -143,8 +138,13 @@ def retrieve_matches(request):
 	player_id = body.get('player_id', None)
 	perspective = body.get('perspective', None)
 	game_mode = body.get('game_mode', None)
+	times_requested = body.get('times_requested', None)
+	seen_match_ids = body.get('seen_match_ids', None)
 
 	player_cache_key = '{}_match_data'.format(player_id)
+
+	if times_requested:
+		times_requested = int(times_requested)
 
 	ajax_data = {}
 
@@ -152,90 +152,88 @@ def retrieve_matches(request):
 
 	current_player = get_object_or_404(Player, api_id=player_id)
 
-	player_names = set(list(Participant.objects.filter(player__api_id=player_id).values_list('player_name', flat=True)))
-
 	if cached_ajax_data:
 
 		cached_perspective = cached_ajax_data.get('perspective', None)
 		cached_game_mode = cached_ajax_data.get('game_mode', None)
 		cached_data = cached_ajax_data.get('data', None)
+		cached_match_ids = cached_ajax_data.get('match_ids', None)
 
-		if cached_perspective is None:
-			cached_perspective = 'all'
+		game_mode = correct_mode(game_mode)
+		perspective = correct_perspective(perspective)
 
-		if cached_game_mode is None:
-			cached_game_mode = 'all'
-
-		if cached_perspective and correct_perspective(cached_perspective) != correct_perspective(perspective):
+		if cached_perspective and correct_perspective(cached_perspective) != perspective:
+			cached_perspective = perspective
 			request_again = True
 
-		if cached_game_mode and correct_mode(cached_game_mode)  != correct_mode(game_mode):
+		if cached_game_mode and correct_mode(cached_game_mode) != game_mode:
+			cached_game_mode = game_mode
 			request_again = True
 
-		if not request_again:
+		match_data = get_match_data(player_id, current_player.id, cached_game_mode, cached_perspective)
+		match_ids = list(set(match_data.values_list('match_id', flat=True)))
 
-			kwargs = {}
+		## this is the first time this user has requested, but the data is cached
+		if times_requested == 0:
+			## thus, server the match_ids
+			cached_match_ids = match_ids
+			include = True
+		else:
+			## this means they've requeted more than one time
+			difference = len(cached_match_ids) > 0 and cached_match_ids != match_ids
 
-			this_perspective = correct_perspective(perspective)
-			this_game_mode = correct_mode(game_mode)
-
-			if this_game_mode and this_perspective:
-				mode_fiter = "{}-{}".format(this_game_mode, this_perspective)
-				kwargs['match__mode__iexact'] = mode_fiter
-			elif this_game_mode:
-				mode_fiter = this_game_mode
-				kwargs['match__mode__icontains'] = mode_fiter
-			elif this_perspective:
-				mode_fiter = this_perspective
-				kwargs['match__mode__icontains'] = mode_fiter
-			
-			fourteen_days_ago = timezone.now() - timedelta(days=14)
-
-			kwargs['participants__player_name__in'] = player_names
-			kwargs['match__api_id__icontains'] = player_id
-			kwargs['match__created__gte'] = fourteen_days_ago
-
-			roster_data = Roster.objects.filter(**kwargs)\
-			.select_related('match')\
-			.prefetch_related('participants')\
-			.order_by('-match__created')\
-			.distinct()
-
-			if game_mode and perspective:
-				message = "<strong>{}</strong> {} {} matches returned in ".format(roster_data.count(), game_mode.upper(), perspective)
-			elif game_mode:
-				message = "<strong>{}</strong> TPP/FPP {} matches returned in ".format(roster_data.count(), game_mode.upper())
-			elif perspective:
-				message = "<strong>{}</strong> {} (SOLO, DUO, SQUAD) matches returned in ".format(roster_data.count(), perspective.upper())
+			if difference:
+				include = True
+				## find the difference
+				cached_match_ids = list(set(cached_match_ids) - set(match_ids))
 			else:
-				message = "<strong>{}</strong> TPP/FPP (SOLO, DUO, SQUAD) matches returned in ".format(roster_data.count())
+				include = False
 
-			message = "{}<strong>{}</strong>(s)".format(message, "{0:.2f}".format(time.time() - start_time))
+		if seen_match_ids:
+			cached_match_ids = list(set(cached_match_ids) - set(seen_match_ids))
+			include = False
 
-			test_data = {
-				'perspective': perspective,
-				'game_mode': this_game_mode,
-				'message': message,
-				'data':[
-					{
-						'map': roster.match.map.name if roster.match.map else None,
-						'mode': roster.match.mode.upper(),
-						'custom_match': 'Yes' if roster.match.is_custom_match else 'No',
-						'date_created': datetime.strftime(roster.match.created, '%d/%m/%Y %H:%M:%S'),
-						'team_details': ''.join([f"{x.player_name}: {x.kills} kill(s) | {x.damage} damage<br>" for x in roster.participants.all()]),
-						'team_placement': roster.placement,
-						'actions': f'<a href="/match_detail/{roster.match.api_id}/" class="btn btn-link btn-sm active" role="button">View Match</a>'
-					} for roster in roster_data
-				],
-				'api_id': current_player.api_id
-			}
+		if cached_match_ids:
+			if include:
+				match_data = match_data.filter(match_id__in=cached_match_ids)
+			else:
+				match_data = match_data.exclude(match_id__in=cached_match_ids)
 
-			
-			if len(cached_data) < len(test_data['data']):
-				cached_ajax_data = test_data
-			
-			if not request_again and cached_ajax_data:
-				return Response(cached_ajax_data)
+		if len(cached_data) < match_data.count():
+			request_again = True
+		else:
+			request_again = False
+
+		if request_again:
+
+			cached_match_ids = cached_match_ids + list(set(match_data.values_list('match_id', flat=True)))
+			cached_match_ids = list(set(cached_match_ids))
+
+			new_ajax_data = cached_ajax_data
+
+			data = [
+				{
+					'id': roster.match.id,
+					'map': roster.match.map.name if roster.match.map else None,
+					'mode': roster.match.mode.upper(),
+					'custom_match': 'Yes' if roster.match.is_custom_match else 'No',
+					'date_created': datetime.strftime(roster.match.created, '%d/%m/%Y %H:%M:%S'),
+					'team_details': ''.join([f"{x.player_name}: {x.kills} kill(s) | {x.damage} damage<br>" for x in roster.participants.all()]),
+					'team_placement': roster.placement,
+					'actions': f'<a href="/match_detail/{roster.match.api_id}/" class="btn btn-link btn-sm active" role="button">View Match</a>'
+				} for roster in match_data
+			]
+
+			new_ajax_data['data'] = data
+			new_ajax_data['match_ids'] = cached_match_ids
+
+			cache.set(player_cache_key, new_ajax_data, 60)
+
+			if request_again and new_ajax_data:
+				return Response(new_ajax_data)
+
+		else:
+			return Response(cached_ajax_data)
 
 	else:
 		request_again = True
@@ -246,55 +244,22 @@ def retrieve_matches(request):
 	if request_again:
 
 		if player_id and perspective and game_mode:
-			
-			message =  None
 
-			kwargs = {}
-
-			perspective = correct_perspective(perspective)
 			game_mode = correct_mode(game_mode)
+			perspective = correct_perspective(perspective)
 
-			if game_mode and perspective:
-				mode_fiter = "{}-{}".format(game_mode, perspective)
-				kwargs['match__mode__iexact'] = mode_fiter
-			elif game_mode:
-				mode_fiter = game_mode
-				kwargs['match__mode__icontains'] = mode_fiter
-			elif perspective:
-				mode_fiter = perspective
-				kwargs['match__mode__icontains'] = mode_fiter
+			match_data = get_match_data(player_id, current_player.id, game_mode, perspective)
 
-			fourteen_days_ago = timezone.now() - timedelta(days=14)
-
-			kwargs['participants__player_name__in'] = player_names
-			kwargs['match__api_id__icontains'] = player_id
-			kwargs['match__created__gte'] = fourteen_days_ago
-
-			roster_data = Roster.objects.filter(**kwargs)\
-			.select_related('match')\
-			.prefetch_related('participants')\
-			.distinct()\
-			.order_by('-match__created')
-
-			if roster_data and roster_data.exists():
-
-				if game_mode and perspective:
-					message = "<strong>{}</strong> {} {} matches returned in ".format(roster_data.count(), game_mode.upper(), perspective)
-				elif game_mode:
-					message = "<strong>{}</strong> TPP/FPP {} matches returned in ".format(roster_data.count(), game_mode.upper())
-				elif perspective:
-					message = "<strong>{}</strong> {} (SOLO, DUO, SQUAD) matches returned in ".format(roster_data.count(), perspective.upper())
-				else:
-					message = "<strong>{}</strong> TPP/FPP (SOLO, DUO, SQUAD) matches returned in ".format(roster_data.count())
-
-				message = "{}<strong>{}</strong>(s)".format(message, "{0:.2f}".format(time.time() - start_time))
+			if match_data.exists():
+				
+				match_ids = match_data.values_list('match_id', flat=True).distinct()
 
 				ajax_data = {
 					'perspective': perspective,
 					'game_mode': game_mode,
-					'message': message,
 					'data':[
-						{
+						{	
+							'id': roster.match.id,
 							'map': roster.match.map.name if roster.match.map else None,
 							'mode': roster.match.mode.upper(),
 							'custom_match': 'Yes' if roster.match.is_custom_match else 'No',
@@ -302,9 +267,10 @@ def retrieve_matches(request):
 							'team_details': ''.join([f"{x.player_name}: {x.kills} kill(s) | {x.damage} damage<br>" for x in roster.participants.all()]),
 							'team_placement': roster.placement,
 							'actions': f'<a href="/match_detail/{roster.match.api_id}/" class="btn btn-link btn-sm active" role="button">View Match</a>'
-						} for roster in roster_data
+						} for roster in match_data
 					],
 					'api_id': current_player.api_id,
+					'match_ids': match_ids
 				}
 
 				if cache.has_key(player_cache_key) and redo_cache:
@@ -341,39 +307,16 @@ def retrieve_season_stats(request):
 	body = request.data
 
 	player_id = body.get('player_id', None)
-	perspective = body.get('perspective', None)
+
 	platform = body.get('platform', None)
 
 	player = get_object_or_404(Player, api_id=player_id)
 
 	player_cache_key = '{}_season_data'.format(player_id)
-
 	cached_ajax_data = cache.get(player_cache_key, None)
 
-	redo = False
-
-	perspective = correct_perspective(perspective)
-
-	if cached_ajax_data:
-
-		for x in cached_ajax_data:
-			keys = x.keys() if x.keys() else None
-
-			if keys:
-				if perspective and perspective not in keys:
-					redo = True
-	else:
-		redo = True
-
-	if redo:
-
-		kwargs = {}
-		exclude = {}
-
-		if perspective and perspective == 'fpp':
-			kwargs['mode__icontains'] = perspective
-		elif perspective and perspective == 'tpp':
-			exclude['mode__icontains'] = 'fpp'
+	if not cached_ajax_data:
+		retrieve_player_season_stats(player_id,  platform)
 
 		season_stats_queryset = PlayerSeasonStats.objects.only(
 			'player',
@@ -385,8 +328,7 @@ def retrieve_season_stats(request):
 			player=player,
 			season__is_current=True,
 			season__platform=platform,
-			**kwargs
-		).exclude(**exclude)
+		)
 
 		ajax_data = [
 			{
@@ -412,6 +354,43 @@ def retrieve_season_stats(request):
 
 	return Response(ajax_data)
 
+@api_view(['GET'])
+def get_match_rosters(request, match_id):
+
+	match = get_object_or_404(Match, id=match_id)
+	match_id = match.api_id
+	account_id = match_id.split('_')[0]
+	match_url = match.api_url
+
+	if not match_url or match_id not in match_url:
+		current_player = get_object_or_404(Player, api_id__iexact=account_id)
+		match_id = match_id = match.api_id.split('_')[1]
+		platform_url = current_player.platform_url
+		match_url = build_match_url(platform_url, match_id)
+	
+	match_json = make_request(match_url)
+
+	match_roster_cache = f'{match_id}_roster'
+
+	rosters = cache.get(match_roster_cache, None)
+
+	if not rosters:
+
+		telemetry = get_match_telemetry_from_match(
+			match_json=match_json,
+			match=match,
+			return_early=True
+		)
+
+		rosters = create_leaderboard_for_match(
+			match_json=telemetry,
+			telemetry=None,
+			save=False
+		)
+
+		cache.set(match_roster_cache, rosters, 60*60)
+
+	return Response(rosters)
 
 @api_view(['GET'])
 def match_detail(request, match_id):
@@ -425,6 +404,9 @@ def match_detail(request, match_id):
 	match_id = split[1]
 
 	if match_exists.exists():
+		current_player = get_object_or_404(Player, api_id=account_id)
+		player_name = Participant.objects.filter(player=current_player).latest('id').player_name
+
 		match = match_exists.first()
 		telemetry_exists = telemetry_objects.filter(match=match)
 
@@ -433,50 +415,20 @@ def match_detail(request, match_id):
 			match_url = match.api_url
 
 			if not match_url or match_id not in match_url:
-				current_player = get_object_or_404(Player, api_id=account_id)
 				platform_url = current_player.platform_url
 				match_url = build_match_url(platform_url, match_id)
 
 			match_json = make_request(match_url)
+			match_type = match_json['data']['attributes']['matchType']
 
 			get_match_telemetry_from_match(
 				match_json=match_json,
-				match=match
+				match=match,
+				return_early=False
 			)
 
 			telemetry = telemetry_objects.filter(match=match)
 			telemetry = telemetry.first()
-
-			rosters = [
-				{
-					'roster_id': x['id'],
-					'roster_rank': x['attributes']['stats']['rank'],
-					'participant_objects':''.join(
-						[
-							f"{y['attributes']['stats']['name']}: {y['attributes']['stats']['kills']} kill(s) | {round(y['attributes']['stats']['damageDealt'], 2)} damage<br>"
-							for y in match_json['included']
-							if y['type'] == 'participant' and any(y['id'] == z['id'] for z in x['relationships']['participants']['data'])
-						]
-					),
-				} for x in match_json['included'] if x['type'] == 'roster'
-			]
-
-			telemetry_events = [
-				TelemetryEvent(
-					event_type='Roster',
-					telemetry=telemetry,
-					description=json.dumps(roster),
-					timestamp=None,
-					player=None,
-					x_cord=None,
-					y_cord=None
-				)
-				for roster in rosters
-			]
-			TelemetryEvent.objects.bulk_create(telemetry_events)
-			
-			del rosters
-
 		else:
 			telemetry = telemetry_exists.first()
 
@@ -485,7 +437,8 @@ def match_detail(request, match_id):
 		log_match_start = get_object_or_404(telemetry_events, event_type__iexact='LogMatchStart')
 		total_match_kills = get_object_or_404(telemetry_events, event_type__iexact='LogTotalMatchKills')
 		log_match_end = get_object_or_404(telemetry_events, event_type__iexact='LogMatchEnd')
-		roster_telem = telemetry_events.filter(event_type__iexact='Roster')
+		roster_telem = get_object_or_404(TelemetryRoster, telemetry=telemetry)
+		roster_participant = RosterParticipant.objects.filter(roster__match=match, participant__player=current_player).first()
 
 		log_match_start_timestamp = parse(log_match_start.timestamp)
 		log_match_start_timestamp = str(log_match_start_timestamp)
@@ -507,7 +460,28 @@ def match_detail(request, match_id):
 		
 		elapased_time = datetime.strptime(log_match_end_timestamp, FMT) - datetime.strptime(log_match_start_timestamp, FMT)
 
-		heals_used = telemetry_events.filter(event_type__iexact='LogItemUse').count()
+		heals_items_used = telemetry_events.filter(event_type__iexact='LogItemUseMed').count()
+		boost_items_used = telemetry_events.filter(event_type__iexact='LogItemUseBoost').count()
+
+		ai_events = telemetry_events.filter(event_type__iexact='AICount')
+		player_events = telemetry_events.filter(event_type__iexact='PlayerCount')
+
+		ais = False
+		ai_count = 0
+		player_count = 0
+		ai_percentage = 0.00
+		
+		if ai_events.exists():
+			ai_count = int(ai_events.first().description)
+			ais = True
+
+		if player_events.exists():
+			player_count = int(player_events.first().description)
+
+		total_count = ai_count + player_count
+		ai_percentage = round((ai_count / total_count) * 100)
+		player_percentage =  round((player_count / total_count) * 100)
+
 		telemetry_excluding_some_events = telemetry_events.exclude(Q(event_type__iexact='LogTotalMatchKills') | Q(event_type__iexact='Roster') | Q(timestamp__isnull=True))
 
 		match_map_url = match.map.image_url
@@ -515,26 +489,39 @@ def match_detail(request, match_id):
 
 		telemetry_data = {
 			'telemetry_data':{
-				'player_kills': total_match_kills.description,
-				'match_id': match_id,
-				'match_elapsed_time': f'{elapased_time} minutes',
-				'match_map_name': map_name,
-				'match_heals_used': heals_used,
-				'map_image': match_map_url,
-				'events': [
-					{
-						'timestamp': datetime.strftime(parse(x.timestamp), '%H:%M:%S'),
-						'event': x.description,
-						'x_cord': x.x_cord,
-						'y_cord': x.y_cord
-					} for x in telemetry_excluding_some_events
-				],
-				'rosters': [
-				  	json.loads(x.description.split("b'")[1].split("\'")[0])
-				  	for x in roster_telem if x.description
-				]
+				'match_data':{
+					'match_id': match_id,
+					'match_elapsed_time': f'{elapased_time} minutes',
+					'match_map_name': map_name,
+					'map_image': match_map_url,
+					'time_since': timesince(match.created),
+					'events': [
+						{
+							'timestamp': datetime.strftime(parse(x.timestamp), '%H:%M:%S'),
+							'event': x.description,
+							'x_cord': x.x_cord,
+							'y_cord': x.y_cord
+						} for x in telemetry_excluding_some_events
+					],
+					'player_breakdown':{
+						'ais': ais,
+						'ai_count': ai_count,
+						'ai_percentage': ai_percentage,
+						'player_count': player_count,
+						'player_percentage': player_percentage,
+						'total_count': total_count,
+						'rosters': roster_telem.json,
+					}
+				},
+				'player_data':{
+					'player_kills': total_match_kills.description,
+					'player_damage': roster_participant.participant.damage,
+					'knocks': roster_participant.participant.knocks,
+					'player_name': player_name,
+					'boost_items_used': boost_items_used,
+					'heals_items_used': heals_items_used,
+				}
 			}
 		}
 		
 		return Response(telemetry_data)
-		
