@@ -21,8 +21,10 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '-gr%#*4@3lwac+@nkh*qusz@+2s3i-r+77v&1*+e^o4x0p8g_k'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-ALLOWED_HOSTS = []
+DEBUG = False
+ALLOWED_HOSTS = [
+	'127.0.0.1'
+]
 
 # Application definition
 INSTALLED_APPS = [
@@ -70,7 +72,6 @@ WSGI_APPLICATION = 'statsapp.wsgi.application'
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databasesF
 DATABASES = {
 	'default': {
-		'CONN_MAX_AGE': 1000,
 		'ENGINE': 'django.db.backends.mysql',
 		'NAME': 'local',
 		'USER': 'root',
@@ -107,6 +108,54 @@ AUTH_PASSWORD_VALIDATORS = [
 		'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
 	},
 ]
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+	'filters': {
+        'queries_above_300ms': {
+            '()': 'django.utils.log.CallbackFilter',
+            'callback': lambda record: record.duration > 0.3
+        },
+    },
+	'formatters': {
+        'verbose': {
+			'()': 'django.utils.log.ServerFormatter',
+            'format': '[{server_time}]({levelname}) {message}',
+			'datefmt' : '%Y-%m-%d %H:%M:%S',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'class':'logging.handlers.RotatingFileHandler',
+            'filename': './logs/errors_and_debug.log',
+			'formatter': 'verbose'
+        },
+		'console': {
+            'class': 'logging.StreamHandler',
+			'formatter': 'verbose'
+        },
+		'sql_log':{
+            'class':'logging.handlers.RotatingFileHandler',
+            'filename': './logs/long_running_sql_queries.log',
+			'formatter': 'verbose',
+			'filters': ['queries_above_300ms'],
+        }
+    },
+    'loggers': {
+		'': {
+            'level': 'WARNING',
+            'handlers': ['file', 'console'],
+			'propagate': True,
+        },
+		'django.db': {
+            'handlers': ['sql_log'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
+}
 
 
 # Internationalization

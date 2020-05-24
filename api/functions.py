@@ -1,6 +1,8 @@
 import django
 django.setup()
 
+import sys
+
 
 ## my files
 import api.settings as api_settings
@@ -24,7 +26,13 @@ from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Count
 
+from django.core.cache import cache
+
 session = requests.Session()
+
+import logging
+
+logger = logging.getLogger('django')
 
 def build_url(platform):
 	if 'steam' in platform.strip().lower():
@@ -54,15 +62,15 @@ def build_url(platform):
 		)
 
 def get_platform(url):
-	if 'steam' in platform.strip().lower():
+	if 'steam' in url.strip().lower():
 		return 'steam'
-	elif 'xbox' in platform.strip().lower():
+	elif 'xbox' in url.strip().lower():
 		return 'xbox'
-	elif "psn" in platform.strip().lower():
+	elif "psn" in url.strip().lower():
 		return 'psn'
-	elif "kakao" in platform.strip().lower():
+	elif "kakao" in url.strip().lower():
 		return 'kakao'
-	elif "tour" in platform.strip().lower():
+	elif "tour" in url.strip().lower():
 		return 'tour'
 
 def build_player_url(base_url, player_name):
@@ -116,10 +124,15 @@ def make_request(url):
 	if 'season' in url:
 		time.sleep(6)
 
-	if 'playerNames' in url:
-		player_name = url.split('=')[1]
-
-	return json.loads(session.get(url, headers=api_settings.API_HEADER).content)
+	try:
+		response = json.loads(session.get(url, headers=api_settings.API_HEADER).content)
+	except:
+		time.sleep(1)
+		logger.info(f'For some reason, requesting {url} failed.')
+		response = json.loads(session.get(url, headers=api_settings.API_HEADER).content)
+		time.sleep(1)
+	
+	return response
 
 def parse_player_object(platform_url, player_response):
 
@@ -133,7 +146,7 @@ def parse_player_object(platform_url, player_response):
 		else:
 			player_id = player_response['data']['id']
 
-		if not player_queryset.filter(api_id=player_id).exists():
+		if not player_queryset.filter(api_id__iexact=player_id).exists():
 			player = Player(
 				api_id=player_id,
 				platform_url=platform_url,
@@ -154,6 +167,7 @@ def parse_player_object(platform_url, player_response):
 
 		return player_id, matches
 	else:
+
 		return None, None
 
 def get_player_match_id(player_id, match_id):
@@ -164,6 +178,7 @@ def get_object_or_none(klass, *args, **kwargs):
 	try:
 		return queryset.get(*args, **kwargs)
 	except queryset.model.DoesNotExist:
+		logger.info(f'Tried to get {klass} object with kwargs {kwargs}, however returned None.')
 		return None
 
 def get_match_data(player_api_id, player_id, game_mode, perspective):
@@ -196,158 +211,186 @@ def get_match_data(player_api_id, player_id, game_mode, perspective):
 
 	return roster_data
 
+def chunk_matches(matches, chunk):
+	return [matches[i:i + chunk] for i in range(0, len(matches), chunk)]
+
+def parse_chunked_player_matches(chunk, player_id, platform_url):
+	parse_player_matches(chunk, player_id, platform_url)
+	platform = get_platform(platform_url)
+	player_currently_processing_cache_key = '{}_{}_current_processing'.format(player_id, platform)
+	cache.set(player_currently_processing_cache_key, False, 60)
+	
 def parse_player_matches(match_json_list, player_id, platform_url):
 
 	map_queryset = Map.objects.only('reference')
 	player_queryset = Player.objects.only('api_id')
 
+
+	json_length = len(match_json_list)
+	message = f'{json_length} matches to parse for {player_id}'
+	logger.info(message)
+
+	match_count = 0
+
+	total_time_taken = 0
+
 	for match in match_json_list:
 
-		start_time = time.time()
+		match_count += 1
 
 		match_id = match['data']['id']
 
-		match_date = datetime.strptime(match['data']['attributes']['createdAt'].replace('Z', ''), "%Y-%m-%dT%H:%M:%S")
+		try:
 
-		match_date = make_aware(match_date)
+			start_time = time.time()
 
-		match_map =  get_map_name(match['data']['attributes']['mapName'])
-		match_map_reference = match['data']['attributes']['mapName']
-		match_mode = correct_mode(match['data']['attributes']['gameMode'])
-		match_custom = match['data']['attributes']['isCustomMatch']
-		match_shard = match['data']['attributes']['shardId']
-		match_type = match['data']['attributes']['matchType']
+			match_date = datetime.strptime(match['data']['attributes']['createdAt'].replace('Z', ''), "%Y-%m-%dT%H:%M:%S")
 
-		match_url = match['data']['links']['self']
-		match_url = match_url.replace('playbattlegrounds', 'pubg')
+			match_date = make_aware(match_date)
 
-		match_map = map_queryset.filter(reference__iexact=match_map_reference)
+			match_map =  get_map_name(match['data']['attributes']['mapName'])
+			match_map_reference = match['data']['attributes']['mapName']
+			match_mode = correct_mode(match['data']['attributes']['gameMode'])
+			match_custom = match['data']['attributes']['isCustomMatch']
+			match_shard = match['data']['attributes']['shardId']
+			match_type = match['data']['attributes']['matchType']
 
-		if not match_map.exists():
-			match_map = Map(
-				name=match_map,
-				reference=match_map_reference
-			)
-			match_map.save()
-			map_id = match_map.id
-		else:
-			map_id = match_map.first().id
+			match_url = match['data']['links']['self']
+			match_url = match_url.replace('playbattlegrounds', 'pubg')
 
-		this_match = Match(
-			api_id=get_player_match_id(player_id, match_id),
-			created=match_date,
-			map_id=map_id,
-			mode=match_mode,
-			api_url=match_url,
-			is_custom_match=match_custom,
-			match_type=match_type
-		)
-		this_match.save()
+			match_map = map_queryset.filter(reference__iexact=match_map_reference)
 
-		current_player_parsed = [
-			x for x in match['included']
-			if x['type'] == 'participant'
-			and 'attributes' in x
-			and 'stats' in x['attributes']
-			and x['attributes']['stats']['playerId'] == player_id
-		]
-		this_participant_api_id = current_player_parsed[0]['id']
-
-		team_roster = [
-			x for x in match['included']
-			if x['type'] == 'roster'
-			and 'relationships' in x
-			and 'participants' in x['relationships']
-			and any(
-				z['id'] == this_participant_api_id for z in x['relationships']['participants']['data']
-			)
-		]
-		roster_id = team_roster[0]['id']
-		roster_placement = team_roster[0]['attributes']['stats']['rank']
-
-		roster = Roster(
-			placement=roster_placement,
-			match_id=this_match.id,
-			api_id=roster_id
-		)
-		roster.save()
-
-		roster_id = roster.id
-
-		roster_participant_ids = [
-			x['id'] for x in team_roster[0]['relationships']['participants']['data']
-		]
-
-		roster_participants = [
-			x for x in match['included']
-			if x['type'] == 'participant'
-			and x['id'] in roster_participant_ids
-		]
-
-		for participant in roster_participants:
-
-			participant_api_id = participant['id']
-			participant_kills = participant['attributes']['stats'].get('kills', None)
-			participant_damage = participant['attributes']['stats'].get('damageDealt', None)
-			participant_placement = participant['attributes']['stats'].get('winPlace', None)
-			participant_name = participant['attributes']['stats'].get('name', None)
-			participant_player_api_id =  participant['attributes']['stats'].get('playerId', None)
-			knocks = participant['attributes']['stats'].get('DBNOs', None)
-			ride_distance = participant['attributes']['stats'].get('rideDistance', None)
-			swim_distance = participant['attributes']['stats'].get('swimDistance', None)
-			walk_distance = participant['attributes']['stats'].get('walkDistance', None)
-
-			if 'ai' in participant_player_api_id:
-				participant_is_ai = True
-			else:
-				participant_is_ai = False
-
-			participant_player_object = player_queryset.filter(api_id=participant_player_api_id)
-
-			if not participant_player_object.exists():
-				participant_player_object = Player(
-					api_id=participant_player_api_id,
-					platform_url=platform_url,
-					api_url=build_player_account_id_url(platform_url, participant_player_api_id)
+			if not match_map.exists():
+				match_map = Map(
+					name=match_map,
+					reference=match_map_reference
 				)
-				participant_player_object.save()
+				match_map.save()
+				map_id = match_map.id
 			else:
-				participant_player_object = participant_player_object.first()
+				map_id = match_map.first().id
 
-			participant_player_object_id = participant_player_object.id
-
-			participant_object = Participant(
-				api_id=participant_api_id,
-				kills=participant_kills,
-				player_name=participant_name,
-				placement=participant_placement,
-				damage=participant_damage,
-				player_id=participant_player_object_id,
-				is_ai=participant_is_ai,
-				knocks=knocks,
-				ride_distance=ride_distance,
-				swim_distance=swim_distance,
-				walk_distance=walk_distance,
+			this_match = Match(
+				api_id=get_player_match_id(player_id, match_id),
+				created=match_date,
+				map_id=map_id,
+				mode=match_mode,
+				api_url=match_url,
+				is_custom_match=match_custom,
+				match_type=match_type
 			)
-			participant_object.save()
+			this_match.save()
 
-			particpant_id = participant_object.id
+			current_player_parsed = [
+				x for x in match['included']
+				if x['type'] == 'participant'
+				and 'attributes' in x
+				and 'stats' in x['attributes']
+				and x['attributes']['stats']['playerId'] == player_id
+			]
+			this_participant_api_id = current_player_parsed[0]['id']
+
+			team_roster = [
+				x for x in match['included']
+				if x['type'] == 'roster'
+				and 'relationships' in x
+				and 'participants' in x['relationships']
+				and any(
+					z['id'] == this_participant_api_id for z in x['relationships']['participants']['data']
+				)
+			]
+			roster_id = team_roster[0]['id']
+			roster_placement = team_roster[0]['attributes']['stats']['rank']
+
+			roster = Roster(
+				placement=roster_placement,
+				match_id=this_match.id,
+				api_id=roster_id
+			)
+			roster.save()
+
+			roster_id = roster.id
+
+			roster_participant_ids = [
+				x['id'] for x in team_roster[0]['relationships']['participants']['data']
+			]
+
+			roster_participants = [
+				x for x in match['included']
+				if x['type'] == 'participant'
+				and x['id'] in roster_participant_ids
+			]
+
+			for participant in roster_participants:
+
+				participant_api_id = participant['id']
+				participant_kills = participant['attributes']['stats'].get('kills', None)
+				participant_damage = participant['attributes']['stats'].get('damageDealt', None)
+				participant_placement = participant['attributes']['stats'].get('winPlace', None)
+				participant_name = participant['attributes']['stats'].get('name', None)
+				participant_player_api_id =  participant['attributes']['stats'].get('playerId', None)
+				knocks = participant['attributes']['stats'].get('DBNOs', None)
+				ride_distance = participant['attributes']['stats'].get('rideDistance', None)
+				swim_distance = participant['attributes']['stats'].get('swimDistance', None)
+				walk_distance = participant['attributes']['stats'].get('walkDistance', None)
+
+				if 'ai' in participant_player_api_id:
+					participant_is_ai = True
+				else:
+					participant_is_ai = False
+
+				this_player = player_queryset.filter(api_id=participant_player_api_id)
+
+				if not this_player.exists():
+					participant_player_object = Player(
+						api_id=participant_player_api_id,
+						platform_url=platform_url,
+						api_url=build_player_account_id_url(platform_url, player_id)
+					)
+					participant_player_object.save()
+				else:
+					participant_player_object = this_player.first()
+
+				participant_player_object_id = participant_player_object.id
+
+				participant_object = Participant(
+					api_id=participant_api_id,
+					kills=participant_kills,
+					player_name=participant_name,
+					placement=participant_placement,
+					damage=participant_damage,
+					player_id=participant_player_object_id,
+					is_ai=participant_is_ai,
+					knocks=knocks,
+					ride_distance=ride_distance,
+					swim_distance=swim_distance,
+					walk_distance=walk_distance,
+				)
+				participant_object.save()
+
+				particpant_id = participant_object.id
+				
+				roster_participant = RosterParticipant(
+					roster_id=roster_id,
+					participant_id=particpant_id
+				)
+				roster_participant.save()
 			
-			roster_participant = RosterParticipant(
-				roster_id=roster_id,
-				participant_id=particpant_id
-			)
-			roster_participant.save()
-		
-		seconds_taken = "{:0.4f}".format(time.time() - start_time)
-		print(
-			f"--- parsing {match_id} took {seconds_taken}(s) ---"
-		)
+			seconds_taken = "{:0.4f}".format(time.time() - start_time)
+			total_time_taken += time.time() - start_time
+			message =  f"[{match_count}/{json_length}] ({match_id}) took {seconds_taken}(s)"
+			logger.info(message)
+
+		except:
+			logger.info(f'Threw the following error when trying to parse a match ({match_id}). {sys.exc_info()[1]}')
+
+	total_time_taken = "{:0.4f}".format(total_time_taken)
+	message =  f"Took a total of {total_time_taken}(s)"
+	logger.info(message)
 
 def get_player_matches(platform_url, player_response):
 	player_id, player_matches = parse_player_object(platform_url, player_response)
 	parse_player_matches(player_matches, player_id, platform_url)
-	
 	platform = get_platform(platform_url)
 	player_currently_processing_cache_key = '{}_{}_current_processing'.format(player_id, platform)
 	cache.set(player_currently_processing_cache_key, False, 60)
@@ -909,7 +952,10 @@ def parse_match_telemetry(url, asset_id, telemetry_data, date_created, match, ac
 				item_used = item_used.first()
 				item_used = item_used.name
 
-				event_description = f'<b>{player_name}</b> used a <b>{item_used}</b>'
+				if is_player_ai:
+					event_description = f'<i class="fas fa-robot"></i> <b>{player_name}</b> used a <b>{item_used}</b>'
+				else:
+					event_description = f'<i class="fas fa-user"></i> <b>{player_name}</b> used a <b>{item_used}</b>'
 
 				if item_id in ['Item_Boost_PainKiller_C', 'Item_Boost_EnergyDrink_C']:
 					event_type = 'LogItemUseBoost'

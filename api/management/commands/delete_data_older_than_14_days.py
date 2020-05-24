@@ -11,36 +11,36 @@ import os
 from django.db.models import Count
 
 class Command(BaseCommand):
-    help = 'Deletes data older than 14 days.'
+	help = 'Deletes data older than 14 days.'
 
-    def handle(self, *args, **options):
+	def handle(self, *args, **options):
 
-        fourteen_days_ago = timezone.now() - timedelta(days=14)
-        old_matches = Match.objects.filter(created__lt=fourteen_days_ago)
+		fourteen_days_ago = timezone.now() - timedelta(days=14)
+		old_matches = Match.objects.filter(created__lt=fourteen_days_ago)
 
-        logs_path = os.path.realpath('.../logs/deletion_log.log')
+		logs_path = os.path.realpath('.../logs/deletion_log.log')
 
-        log_file = open(logs_path, 'a+')
+		log_file = open(logs_path, 'a+')
 
-        log_file.write(f'########################## COMMAND BEING RAN AT {timezone.now().strftime("%b %d %Y @ %H:%M:%S")} | {old_matches.count()} OBJECTS TO BE DELETED ##########################\n')
+		log_file.write(f'########################## COMMAND BEING RAN AT {timezone.now().strftime("%b %d %Y @ %H:%M:%S")} | {old_matches.count()} OBJECTS TO BE DELETED ##########################\n')
 
-        for match in old_matches:
+		for match in old_matches:
 
-            days_old = timezone.now() - match.created
-            created = match.created.strftime("%b %d %Y @ %H:%M:%S")
-            data = f"~~~~ Match was created on {created} and is {days_old.days} days old ~~~~~\n"
-            log_file.write(data)
-            match.delete()
+			days_old = timezone.now() - match.created
+			created = match.created.strftime("%b %d %Y @ %H:%M:%S")
+			data = f"~~~~ Match was created on {created} and is {days_old.days} days old ~~~~~\n"
+			log_file.write(data)
+			match.delete()
 
-        log_file.close()
+		log_file.close()
 
-        purge_dupes()
+		purge_dupes()
 
 def purge_dupes():
 
 	duplicates = Match.objects.values(
-    	'api_id'
-    ).annotate(
+		'api_id'
+	).annotate(
 		api_id_count=Count('api_id')
 	).filter(api_id_count__gt=1)
 
@@ -54,7 +54,18 @@ def purge_dupes():
 		print('deleting earliest...')
 		earliest.delete()
 
+	duplicates = Player.objects.values(
+		'api_id'
+	).annotate(
+		api_id_count=Count('api_id')
+	).filter(api_id_count__gt=1)
 
+	players = Player.objects.all()
 
-
-       
+	for duplicate in duplicates:
+		api_id = duplicate['api_id']
+		dupes_player = players.filter(api_id__iexact=api_id)
+		
+		earliest = dupes_player.earliest('id')
+		print('deleting earliest...')
+		earliest.delete()

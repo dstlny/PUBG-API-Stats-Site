@@ -7,7 +7,8 @@ from api.settings import API_HEADER
 from api.functions import (
 	build_url, build_lifetime_url, make_request, correct_perspective, correct_mode,
 	build_player_url, get_player_matches, retrieve_player_season_stats, populate_seasons, build_player_account_id_url,
-	make_request, build_match_url, get_match_telemetry_from_match, get_match_data, create_leaderboard_for_match
+	make_request, build_match_url, get_match_telemetry_from_match, get_match_data, create_leaderboard_for_match, get_player_match_id,
+	chunk_matches, parse_player_matches, parse_chunked_player_matches
 )
 
 from api.models import *
@@ -38,8 +39,10 @@ import multiprocessing
 
 from django.utils.timesince import timesince
 
-pool_processes = int((multiprocessing.cpu_count() * 2) + 1) // 2
-pool = multiprocessing.Pool(pool_processes)
+import threading
+import logging
+
+logger = logging.getLogger('django')
 
 @api_view(['GET'])
 def status(request):
@@ -98,32 +101,55 @@ def search(request):
 
 	ajax_data = {}
 
+	player_data_length = 0
+
 	if 'data' in player_response:
+
+		api_ids = list(set(Match.objects.values_list('api_id', flat=True).distinct()))
 
 		if isinstance(player_response['data'], list):
 			player_id = player_response['data'][0]['id']
+			player_data_length = (len(player_response['data'][0]['relationships']['matches']['data']), [match['id'] for match in player_response['data'][0]['relationships']['matches']['data'] if get_player_match_id(player_id, match['id']) not in api_ids]) 
 		else:
 			player_id = player_response['data']['id']
+			player_data_length = (len(player_response['data']['relationships']['matches']['data']), [match['id'] for match in player_response['data']['relationships']['matches']['data'] if get_player_match_id(player_id, match['id']) not in api_ids]) 
 
-		player_currently_processing_cache_key = '{}_{}_current_processing'.format(player_id, platform)
-		currently_processing = cache.get(player_currently_processing_cache_key, None)
+		if player_data_length[0] > 0:
 
-		ajax_data['player_id'] = player_id
-		ajax_data['player_name']  = player_name
+			ajax_data['player_id'] = player_id
+			ajax_data['player_name']  = player_name
 
-		if not currently_processing:
-			cache.set(player_currently_processing_cache_key, True, 60)
-			ajax_data['currently_processing'] = True
-			pool.apply_async(get_player_matches, (platform_url, player_response))
+			length_of_matches = len(player_data_length[1])
+
+			if length_of_matches > 0:
+
+				player_currently_processing_cache_key = '{}_{}_current_processing'.format(player_id, platform)
+				currently_processing = cache.get(player_currently_processing_cache_key, None)
+
+				if not currently_processing:
+					cache.set(player_currently_processing_cache_key, True, 60)
+					ajax_data['currently_processing'] = True
+					thread = threading.Thread(target=get_player_matches,  kwargs={
+						'platform_url': platform_url,
+						'player_response': player_response
+					})
+					thread.daemon = True
+					thread.start()
+				else:
+					ajax_data['currently_processing'] = False
+
+			else:
+				message = "No new matches to process for this user."
+				ajax_data['message'] = message
+				ajax_data['no_new_matches'] = True
+
 		else:
-			ajax_data['currently_processing'] = False
+			error = "Sorry, looks like this player has not played any matches in the last 14 days."
+			ajax_data['error'] = error
 
 	else:
-
-		error = 'Sorry, looks like this player does not exist.'
+		error = "Sorry, looks like this player does not exist."
 		ajax_data['error'] = error
-
-	print("took {:0.4f}(s)".format(time.time() - start_time))
 
 	return Response(ajax_data)
 
@@ -150,7 +176,7 @@ def retrieve_matches(request):
 
 	cached_ajax_data = cache.get(player_cache_key, None)
 
-	current_player = get_object_or_404(Player, api_id=player_id)
+	current_player = Player.objects.filter(api_id=player_id).first()
 
 	if cached_ajax_data:
 
@@ -216,7 +242,7 @@ def retrieve_matches(request):
 					'id': roster.match.id,
 					'map': roster.match.map.name if roster.match.map else None,
 					'mode': roster.match.mode.upper(),
-					'custom_match': 'Yes' if roster.match.is_custom_match else 'No',
+					'custom_match': roster.match.match_type.title() if roster.match.match_type else 'Normal',
 					'date_created': datetime.strftime(roster.match.created, '%d/%m/%Y %H:%M:%S'),
 					'team_details': ''.join([f"{x.player_name}: {x.kills} kill(s) | {x.damage} damage<br>" for x in roster.participants.all()]),
 					'team_placement': roster.placement,
@@ -262,7 +288,7 @@ def retrieve_matches(request):
 							'id': roster.match.id,
 							'map': roster.match.map.name if roster.match.map else None,
 							'mode': roster.match.mode.upper(),
-							'custom_match': 'Yes' if roster.match.is_custom_match else 'No',
+							'custom_match': roster.match.match_type.title() if roster.match.match_type else 'Normal',
 							'date_created': datetime.strftime(roster.match.created, '%d/%m/%Y %H:%M:%S'),
 							'team_details': ''.join([f"{x.player_name}: {x.kills} kill(s) | {x.damage} damage<br>" for x in roster.participants.all()]),
 							'team_placement': roster.placement,
@@ -332,18 +358,16 @@ def retrieve_season_stats(request):
 
 		ajax_data = [
 			{
-				f"{x.mode.lower().replace('-', '_')}_season_stats":{
-					f"{x.mode.lower().replace('-', '_')}_season_stats": correct_mode(x.mode.replace('_', ' ').upper()),
-					f"{x.mode.lower().replace('-', '_')}_season_matches": "{} {}".format(x.rounds_played, 'Matches Played'),
-					f"{x.mode.lower().replace('-', '_')}_season_kills__text": 'Kills',
-					f"{x.mode.lower().replace('-', '_')}_season_kills__figure": x.kills,
-					f"{x.mode.lower().replace('-', '_')}_season_damage__text": 'Damage Dealt',
-					f"{x.mode.lower().replace('-', '_')}_season_damage__figure": str(x.damage_dealt),
-					f"{x.mode.lower().replace('-', '_')}_season_longest_kill__text": 'Longest Kill',
-					f"{x.mode.lower().replace('-', '_')}_season_longest_kill__figure": str(x.longest_kill),
-					f"{x.mode.lower().replace('-', '_')}_season_headshots__text": 'Headshot kills',
-					f"{x.mode.lower().replace('-', '_')}_season_headshots__figure": x.headshot_kills
-				}
+				f"{x.mode.lower().replace('-', '_')}_season_stats": correct_mode(x.mode.replace('_', ' ')).upper(),
+				f"{x.mode.lower().replace('-', '_')}_season_matches": "{} {}".format(x.rounds_played, 'Matches Played'),
+				f"{x.mode.lower().replace('-', '_')}_season_kills__text": 'Kills',
+				f"{x.mode.lower().replace('-', '_')}_season_kills__figure": x.kills,
+				f"{x.mode.lower().replace('-', '_')}_season_damage__text": 'Damage Dealt',
+				f"{x.mode.lower().replace('-', '_')}_season_damage__figure": str(x.damage_dealt),
+				f"{x.mode.lower().replace('-', '_')}_season_longest_kill__text": 'Longest Kill',
+				f"{x.mode.lower().replace('-', '_')}_season_longest_kill__figure": str(x.longest_kill),
+				f"{x.mode.lower().replace('-', '_')}_season_headshots__text": 'Headshot kills',
+				f"{x.mode.lower().replace('-', '_')}_season_headshots__figure": x.headshot_kills
 			} for x in season_stats
 		]
 

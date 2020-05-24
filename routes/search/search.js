@@ -18,21 +18,17 @@ module.exports = function (fastify, opts, done) {
 			let error = api_response.data.error
 			let player_id = api_response.data.player_id
 			let currently_processing = api_response.data.currently_processing
-
-			if(error !== undefined){
-				return res.send({
-					error: error,
-					player_id: null
-				})
-			} else {
-				if(player_id !== undefined){
-					return res.send({
-						player_id: player_id,
-						player_name: api_response.data.player_name,
-						currently_processing:currently_processing
-					})
-				}
-			}
+			let no_new_matches = api_response.data.no_new_matches
+			let message = api_response.data.message
+			
+			return res.send({
+				player_id: player_id,
+				player_name: api_response.data.player_name,
+				currently_processing: currently_processing,
+				no_new_matches: no_new_matches,
+				message: message,
+				error: error
+			})
 		} else { 
 			console.error(api_response)
 		}
