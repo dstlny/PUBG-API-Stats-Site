@@ -4,8 +4,6 @@ module.exports = function (fastify, opts, done) {
 
 	fastify.post('/retrieve_matches', async(req, res) => {
 		
-		console.log(req.body)
-
 		let player_obj = {
 			player_id: req.body.player_id,
 			game_mode: req.body.game_mode,

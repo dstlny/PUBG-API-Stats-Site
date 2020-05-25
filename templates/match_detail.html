@@ -11,11 +11,7 @@
 	$(document).ready(function () {
 		const map_name = "{{ telemetry_data.match_data.match_map_name }}"
 
-		const telem_data = [
-			{%- for telemetry in telemetry_data.match_data.events -%}
-				['{{- telemetry.timestamp }}', '{{ telemetry.event|safe -}}'],
-			{%- endfor -%}
-		];
+		const telem_data = {{ telemetry_data.match_data.events|dump|safe }};
 
 		const x_y_co_ords = [
 			{%- for telemetry in telemetry_data.match_data.events -%}
@@ -29,14 +25,14 @@
 			{%- endfor -%}
 		];
 		
-		const roster_data = [
-			{%- for roster in telemetry_data.match_data.player_breakdown.rosters -%}
-				['{{- roster.roster_rank -}}', '{{- roster.participant_objects|safe -}}'],
-			{%- endfor -%}
-		];
-		
+		const roster_data = {{ telemetry_data.match_data.player_breakdown.rosters|dump|safe }}
+
 		$('#telemetry_datatable_datatable').DataTable({
 			data: telem_data,
+			columns:[
+				{ "data": "timestamp" },
+				{ "data": "event" },
+			],
 			pageLength: 5,
 			order: [[0, "asc"]],
 			scrollY: "400px",
@@ -49,6 +45,10 @@
 
 		$('#rosters_datatable').DataTable({
 			data: roster_data,
+			columns:[
+				{ "data": "roster_rank" },
+				{ "data": "participant_objects" },
+			],
 			pageLength: 5,
 			order: [[0, "asc"]],
 			scrollY: "200px",
@@ -114,14 +114,11 @@
 		var canvas = document.getElementById('map_canvas')
 
 		var image = new Image();
-		image.src = "{{ telemetry_data.match_data.map_image }}";
 		image.onload = function() {
-			var p1 = ctx.transformedPoint(0, 0);
-			var p2 = ctx.transformedPoint(canvas.width, canvas.height);
-			ctx.clearRect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
-			ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 			redraw();
 		}
+
+		image.src = "{{ telemetry_data.match_data.map_image }}";
 
 		map_container_width = $('#map_container')[0]
 		
@@ -316,9 +313,6 @@
 					</div>
 					<br>
 					<table class="table table-bordered">
-						<thead>
-							<th class='card-header text-center' colspan='2'>Match Details</th>
-						</thead>
 						<tbody>
 							<tr>
 								<th class='card-header' width='40%'>Match length</th>
@@ -336,13 +330,6 @@
 								<th class='card-header' width='40%'>Total Bots</th>
 								<td class='card-body'>{{ telemetry_data.match_data.player_breakdown.ai_count }} ({{ telemetry_data.match_data.player_breakdown.ai_percentage }}%)</td>
 							</tr>
-						</tbody>
-					</table>
-					<table class="table table-bordered">
-						<thead>
-							<th class='card-header text-center' colspan='2'>Player Details</th>
-						</thead>
-						<tbody>
 							<tr>
 								<th class='card-header' width='40%'>Kills</th>
 								<td class='card-body'>{{ telemetry_data.player_data.player_kills }}</td>

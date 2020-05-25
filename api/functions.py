@@ -127,10 +127,9 @@ def make_request(url):
 	try:
 		response = json.loads(session.get(url, headers=api_settings.API_HEADER).content)
 	except:
-		time.sleep(1)
-		logger.info(f'For some reason, requesting {url} failed.')
-		response = json.loads(session.get(url, headers=api_settings.API_HEADER).content)
-		time.sleep(1)
+		time.sleep(2)
+		logger.info(f'For some reason, requesting {url} failed with the following error: {sys.exc_info()[1]}.')
+		make_request(url)
 	
 	return response
 
@@ -198,7 +197,7 @@ def get_match_data(player_api_id, player_id, game_mode, perspective):
 		all_game_modes = list(set(Match.objects.values_list('mode', flat=True).distinct()))
 		kwargs['match__mode__in'] = all_game_modes
 
-	fourteen_days_in_past = timezone.now() - timedelta(days=14)
+	fourteen_days_in_past = timezone.now() - timedelta(days=15)
 	
 	kwargs['participants__player_id'] = player_id
 	kwargs['match__api_id__icontains'] = player_api_id
@@ -206,8 +205,7 @@ def get_match_data(player_api_id, player_id, game_mode, perspective):
 
 	roster_data = Roster.objects.filter(**kwargs)\
 	.select_related('match')\
-	.prefetch_related('participants')\
-	.order_by('-match__created')
+	.prefetch_related('participants')
 
 	return roster_data
 

@@ -200,7 +200,7 @@ $(document).ready(function() {
 		
 			let generated_row_data =`
 				<div class="col-md-12" style='padding: 10px;' id='${generated_datatable_id}_wrapper'>
-					<table class='table table-condensed hover' id='${generated_datatable_id}' style='width: 100%'>
+					<table class='table table-condensed' id='${generated_datatable_id}' style='width: 100%'>
 						<thead>
 							<tr>
 								<th width='20%%'>Rank</th>
@@ -241,7 +241,7 @@ $(document).ready(function() {
 						let i;
 						let match_id;
 						let len;
-		
+					
 						that.setPlayerId(result.player_id)
 						for (i = 0, len=result.data.length; i < len; i++){
 							match_id = result.data[i].id
@@ -251,7 +251,6 @@ $(document).ready(function() {
 									'',
 									result.data[i].map,
 									result.data[i].mode,
-									result.data[i].custom_match,
 									result.data[i].date_created,
 									result.data[i].team_placement,
 									result.data[i].team_details,
@@ -266,12 +265,6 @@ $(document).ready(function() {
 						$('#seasons_container').show();
 						$("#currently_processing").hide()
 					}
-		
-					// query = buildDataTableQuery(data.perspective, data.game_mode)
-		
-					// if(query){
-					// 	table.column(1).search(query).draw();
-					// }
 				},
 				error: function(xhr, error, code){
 					that.tries += 1
@@ -307,8 +300,6 @@ $(document).ready(function() {
 					datatable: roster_table,
 				}
 
-				let this_object;
-
 				$(`#${datatable_id}`).LoadingOverlay("show");
 			
 				$.ajax({
@@ -320,11 +311,10 @@ $(document).ready(function() {
 						let i;
 						let len;
 						for (i = 0, len=rosters.length; i < len; i++){						
-							this_object = {
+							that.table_rosters[datatable_id].actual_data.push({
 								roster_rank: rosters[i].roster_rank,
 								participant_objects: rosters[i].participant_objects,
-							}
-							that.table_rosters[datatable_id].actual_data.push(this_object)
+							})
 						}
 						that.table_rosters[datatable_id].datatable.rows.add(that.table_rosters[datatable_id].actual_data).draw(false)
 						$(`#${datatable_id}`).LoadingOverlay("hide", true);
@@ -396,15 +386,14 @@ $(document).ready(function() {
 				defaultContent: '',
 			},
 			{ width: '10%' }, // map
-			{ width: '10%', searchable: true }, // mode
-			{ width: '10%' }, // custom 
-			{ width: '10%', type: "datetime" }, // created
+			{ width: '10%' }, // mode
+			{ width: '15%', type: "datetime" }, // created
 			{ width: '10%' }, // placement
-			{ width: '40%' }, // details
+			{ width: '30%' }, // details
 			{ width: '20%' }, // actions
 		],
 		pageLength: 25,
-		order: [[ 4, "desc" ]],
+		order: [[ 3, "desc" ]],
 		processing: true,
 		language: {
 			processing: '<i class="fa fa-spinner fa-spin fa-fw"></i><span class="sr-only">Loading...</span> ',
@@ -429,6 +418,33 @@ $(document).ready(function() {
 			row.child(html).show();
 			app.getRosterForMatch(id, datatable_id)
 			tr.addClass('shown');
+		}
+	});
+
+	// basically, lets destroy the roster tables because, well, we're going to the next (or prev) page - no need to keep it around
+	table.on('page.dt', function() {
+		app.table_rosters = {}
+	});
+
+	$('#results_datatable tfoot th').each(function(idx) {
+		if(idx !== 0 && idx !== 6){
+			var title = $(this).text();
+			$(this).html('<input class="form-control" style="width: 100%;" type="text" placeholder="Search ' + title + '" />');
+		}
+	});
+	
+	// Apply the search
+	table.columns().every(function(idx) {
+		if(idx !== 0 && idx !== 6){
+			var that = this;
+		
+			$('input', this.footer()).on('keyup change', function() {
+				if (that.search() !== this.value) {
+					that
+					.search(this.value)
+					.draw();
+				}
+			});
 		}
 	});
 

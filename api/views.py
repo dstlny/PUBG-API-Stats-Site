@@ -197,6 +197,7 @@ def retrieve_matches(request):
 			request_again = True
 
 		match_data = get_match_data(player_id, current_player.id, cached_game_mode, cached_perspective)
+
 		match_ids = list(set(match_data.values_list('match_id', flat=True)))
 
 		## this is the first time this user has requested, but the data is cached
@@ -215,20 +216,28 @@ def retrieve_matches(request):
 			else:
 				include = False
 
-		if seen_match_ids:
-			cached_match_ids = list(set(cached_match_ids) - set(seen_match_ids))
-			include = False
-
 		if cached_match_ids:
 			if include:
 				match_data = match_data.filter(match_id__in=cached_match_ids)
 			else:
 				match_data = match_data.exclude(match_id__in=cached_match_ids)
 
+		if seen_match_ids:
+			cached_match_ids = list(set(cached_match_ids) - set(seen_match_ids))
+			include = False
+
 		if len(cached_data) < match_data.count():
 			request_again = True
 		else:
 			request_again = False
+
+		if cached_game_mode and cached_perspective:
+			mode_fiter = "{}-{}".format(cached_game_mode, cached_perspective)
+			match_data.filter(match__mode__iexact=mode_fiter)
+		elif cached_game_mode:
+			match_data.filter(match__mode__icontains=cached_game_mode)
+		elif cached_perspective:
+			match_data.filter(match__mode__icontains=cached_perspective)
 
 		if request_again:
 
