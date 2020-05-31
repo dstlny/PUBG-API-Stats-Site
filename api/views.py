@@ -71,7 +71,7 @@ def search(request):
 
 	if not cached_platform_url:
 		platform_url = build_url(platform)
-		cache.set(player_platform_url_cache_key, platform_url, 60)
+		cache.set(player_platform_url_cache_key, platform_url, 60*30)
 	else:
 		platform_url = cached_platform_url
 
@@ -79,7 +79,7 @@ def search(request):
 
 	if not cached_player_url:
 		player_url = build_player_url(base_url=platform_url, player_name=player_name)
-		cache.set(player_player_url_cache_key, player_url, 60)
+		cache.set(player_player_url_cache_key, player_url, 60*30)
 	else:
 		player_url = cached_player_url
 
@@ -142,6 +142,12 @@ def search(request):
 				message = "No new matches to process for this user."
 				ajax_data['message'] = message
 				ajax_data['no_new_matches'] = True
+				if not cached_player_url:
+					cache.touch(player_player_url_cache_key, 120)
+				if not cached_platform_url:
+					cache.touch(player_platform_url_cache_key, 120)
+				if not cached_player_response:
+					cache.touch(player_player_response_cache_key, 120)
 
 		else:
 			error = "Sorry, looks like this player has not played any matches in the last 14 days."
@@ -337,7 +343,7 @@ def retrieve_matches(request):
 	return Response(ajax_data)
 
 @api_view(['GET', 'POST'])
-def retrieve_season_stats(request):
+def retrieve_season_stats(request, ranked=None):
 
 	body = request.data
 
@@ -407,21 +413,19 @@ def get_match_rosters(request, match_id):
 
 	rosters = cache.get(match_roster_cache, None)
 
-	if not rosters:
+	telemetry = get_match_telemetry_from_match(
+		match_json=match_json,
+		match=match,
+		return_early=True
+	)
 
-		telemetry = get_match_telemetry_from_match(
-			match_json=match_json,
-			match=match,
-			return_early=True
-		)
+	rosters = create_leaderboard_for_match(
+		match_json=telemetry,
+		telemetry=None,
+		save=False
+	)
 
-		rosters = create_leaderboard_for_match(
-			match_json=telemetry,
-			telemetry=None,
-			save=False
-		)
-
-		cache.set(match_roster_cache, rosters, 60*60)
+	cache.set(match_roster_cache, rosters, 60*60)
 
 	return Response(rosters)
 

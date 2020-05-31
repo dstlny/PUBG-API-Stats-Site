@@ -2,6 +2,8 @@ const axios = require('axios')
 
 module.exports = function (fastify, opts, done) {
 
+	const django_ip = fastify.django_ip
+
 	fastify.post('/retrieve_matches', async(req, res) => {
 		
 		let player_obj = {
@@ -13,7 +15,7 @@ module.exports = function (fastify, opts, done) {
 			seen_match_ids: req.body.seen_match_ids
 		}
 
-		let api_response = await axios.post('http://127.0.0.1:8000/api/retrieve_matches', player_obj)
+		let api_response = await axios.post(`http://${django_ip}:8000/api/retrieve_matches`, player_obj)
 
 		if(api_response.status == 200){
 			return res.send({

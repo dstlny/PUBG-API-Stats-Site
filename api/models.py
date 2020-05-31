@@ -94,6 +94,8 @@ class PlayerSeasonStats(models.Model):
     wins = models.IntegerField(blank=True, null=True)
     player = models.ForeignKey('Player', on_delete=models.CASCADE, blank=True, null=True)
     season = models.ForeignKey('Season', on_delete=models.CASCADE)
+    
+    is_ranked = models.BooleanField(default=False, blank=True, null=True)
 
     def __str__(self):
         return "{} - {}".format(self.player.name, self.season.api_id)

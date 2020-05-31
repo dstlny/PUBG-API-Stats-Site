@@ -1,7 +1,8 @@
-axios = require('axios')
+const axios = require('axios')
 
-async function checkStatusPromise(){
-	return await axios.get('http://127.0.0.1:8000/api/status')
+
+async function checkStatusPromise(django_ip){
+	return await axios.get(`http://${django_ip}:8000/api/status`)
 	.then(api_response => {
 		if(api_response.status == 200 && api_response.data.status == 'OK'){
 			return true
@@ -14,8 +15,10 @@ async function checkStatusPromise(){
 	})
 }
 
-function checkStatusLog(){
-	axios.get('http://127.0.0.1:8000/api/status')
+function checkStatusLog(django_ip){
+	let url = `http://${django_ip}:8000/api/status`
+
+	axios.get(url)
 	.then(api_response => {
 		if(api_response.status == 200 && api_response.data.status == 'OK'){
 			console.log(`Backend Django service up and running on port ${8000}!`)
@@ -26,8 +29,8 @@ function checkStatusLog(){
 	})
 }
 
-function checkStatusReturn(){
-	axios.get('http://127.0.0.1:8000/api/status')
+function checkStatusReturn(django_ip){
+	axios.get(`http://${django_ip}:8000/api/status`)
 	.then(api_response => {
 		if(api_response.status == 200 && api_response.data.status == 'OK'){
 			return false

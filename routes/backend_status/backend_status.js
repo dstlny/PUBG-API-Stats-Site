@@ -1,8 +1,8 @@
-utlity = require('../../utility'),
-axios = require('axios')
+const utlity = require('../../utility')
+const axios = require('axios')
 
 module.exports = function (fastify, opts, done) {
-
+	
 	fastify.get('/backend_status', async(req, res) => {
 
 		utlity.checkStatusPromise()

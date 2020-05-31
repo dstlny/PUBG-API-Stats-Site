@@ -1,5 +1,5 @@
-constants = require('../../constants'),
-axios = require('axios')
+const constants = require('../../constants')
+const axios = require('axios')
 
 module.exports = function (fastify, opts, done) {
 

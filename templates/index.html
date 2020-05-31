@@ -12,16 +12,16 @@
 		}
 	</style>
 
-	<div class="card">
+	<div class="card shadow-sm">
 		<div class='card-header' style="text-align: center">
 			Welcome!
 		</div>
 		<div class="card-body" style='padding-bottom:0'>
 			<br>
 			<form method="POST" action='/search' class="form-horizontal no-margin no-padding" style='margin-bottom: 0; padding-bottom: 0' id='search_form'>
-				{{ forms.search_field(name='player_name', value='', type='text', placeholder='Enter a Players Name', required='true') }}
-				{{ forms.select_field(name='platform', type='text', placeholder='', required='true', options=platform_selections) }}
-				{{ forms.select_field_two_one_line(name_one='perspective', type_one='text', placeholder_one='', required_one='true', options_one=perspective_selections, name_two='game_mode', type_two='text', placeholder_two='', required_two='true', options_two=gamemode_selections) }}
+				{{ forms.search_field(name='player_name', type='text', placeholder='Enter a Players Name', required='true') }}
+				{{ forms.select_field(name='platform', type='text', required='true', options=platform_selections) }}
+				{{ forms.select_field_two_one_line(name_one='perspective', required_one='true', options_one=perspective_selections, name_two='game_mode', required_two='true', options_two=gamemode_selections) }}
 				<input type="submit" style="display: none"/>
 			</form>
 			<input type="hidden" id="player_id" value="null">
@@ -55,7 +55,7 @@
 
 	<br>
 
-	<div class="card accordion" id='datatable_container'>
+	<div class="card accordion shadow-sm" id='datatable_container'>
 		<div class="card-header">
 			<b>Please note:</b>
 			<ol>

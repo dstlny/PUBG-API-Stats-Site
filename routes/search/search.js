@@ -1,6 +1,8 @@
-axios = require('axios')
+const axios = require('axios')
 
 module.exports = function (fastify, opts, done) {
+
+	const django_ip = fastify.django_ip
 	
 	fastify.post('/search', async(req, res) => {
 
@@ -11,7 +13,7 @@ module.exports = function (fastify, opts, done) {
 			platform: req.body.platform
 		}
 
-		let api_response = await axios.post('http://127.0.0.1:8000/api/search', player_obj)
+		let api_response = await axios.post(`http://${django_ip}:8000/api/search`, player_obj)
 
 		if(api_response.status == 200){
 

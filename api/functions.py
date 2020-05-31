@@ -419,7 +419,7 @@ def populate_seasons():
 				platform=platform
 			)
 
-def retrieve_player_season_stats(player_id, platform):
+def retrieve_player_season_stats(player_id, platform, ranked=None):
 
 	platform_url = build_url(platform)
 
@@ -434,6 +434,7 @@ def retrieve_player_season_stats(player_id, platform):
 			season_id=current_season.api_id,
 			player_id=player_id
 		)
+
 		season_request = make_request(season_url)
 
 		player_id = current_player.id

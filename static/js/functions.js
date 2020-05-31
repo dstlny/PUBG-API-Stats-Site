@@ -107,22 +107,22 @@ $(document).ready(function() {
 					perspective: that.getPerspective(),
 				},
 				type: 'POST',
-				url: that.getSeasonsEndpoint(),
-				success: function (data, status, xhr) {
-					that.season_requested = true
-					let len;
-					let key;
+				url: that.getSeasonsEndpoint()
+			}).done(function(data){
+				that.season_requested = true
+				let len = data.length;
+				let key;
 
-					for (let i = 0, len=data.length; i < len; i++){
-						for(key in data[i]){
-							document.getElementById(key).innerHTML = data[i][key]
-						}
+				for (let i = 0; i < len; i++){
+					for(key in data[i]){
+						document.getElementById(key).innerHTML = data[i][key]
 					}
-
-					$("#season_stats").LoadingOverlay("hide", true);
-					$('#seasons_container').show();
-					
 				}
+
+				$("#season_stats").LoadingOverlay("hide", true);
+				$('#seasons_container').show();
+			}).fail(function(data){
+				console.log(data)
 			});
 	
 		},
@@ -163,35 +163,35 @@ $(document).ready(function() {
 			$.ajax({
 				data: form_data,
 				type: 'POST',
-				url: $('#search_form').attr('action'),
-				async: true,
-				success: function (data, status, xhr) {
-					if(data.player_id && data.player_name){
-						that.setPlayerName(data.player_name)
-						that.setPlayerId(data.player_id)
-						if(!data.currently_processing){
+				url: $('#search_form').attr('action')   
+			}).done(function(data){
+				if(data.player_id && data.player_name){
+					that.setPlayerName(data.player_name)
+					that.setPlayerId(data.player_id)
+					if(!data.currently_processing){
+						that.loadResultsDataTable();	
+					} else {
+						$("#error").hide()
+						if(data.no_new_matches){
+							let error = data.error || data.message
+							$("#error").show()
+							$("#error_message").text(error);
 							that.loadResultsDataTable();	
 						} else {
-							$("#error").hide()
-							if(data.no_new_matches){
-								let error = data.error || data.message
-								$("#error").show()
-								$("#error_message").text(error);
-								that.loadResultsDataTable();	
-							} else {
-								$("#currently_processing").show()
-								$('#currently_processing_message').text('Currently processing player, please bear with us...')
-								setTimeout(function(){
-									that.loadResultsDataTable();
-								}, 5000);
-							}
+							$("#currently_processing").show()
+							$('#currently_processing_message').text('Currently processing player, please bear with us...')
+							setTimeout(function(){
+								that.loadResultsDataTable();
+							}, 5000);
 						}
-					} else if(data.error){
-						$("#currently_processing").hide()
-						$("#error").show()
-						$("#error_message").text(data.error);
 					}
-				}     
+				} else if(data.error){
+					$("#currently_processing").hide()
+					$("#error").show()
+					$("#error_message").text(data.error);
+				}
+			}).fail(function(result){
+				console.log(result)
 			});
 		},
 		formatChildRow: function(id) {
@@ -233,47 +233,44 @@ $(document).ready(function() {
 
 			$.ajax({
 				url: that.getMatchesEndpoint(),
-				async: true,
 				type:'POST',
 				data: data,
-				success: function(result){
-					if(result.data){
-						let i;
-						let match_id;
-						let len;
-					
-						that.setPlayerId(result.player_id)
-						for (i = 0, len=result.data.length; i < len; i++){
-							match_id = result.data[i].id
-							if(!data.seen_match_ids.includes(match_id)){
-								data.seen_match_ids.push(match_id)
-								let row_node = table.row.add([
-									'',
-									result.data[i].map,
-									result.data[i].mode,
-									result.data[i].date_created,
-									result.data[i].team_placement,
-									result.data[i].team_details,
-									result.data[i].actions
-								]).node();
-								$(row_node).attr("id", match_id);
-							}
+			}).done(function(result){
+				if(result.data){
+					let i;
+					let match_id;
+					let len;
+				
+					that.setPlayerId(result.player_id)
+					for (i = 0, len=result.data.length; i < len; i++){
+						match_id = result.data[i].id
+						if(!data.seen_match_ids.includes(match_id)){
+							data.seen_match_ids.push(match_id)
+							let row_node = table.row.add([
+								'',
+								result.data[i].map,
+								result.data[i].mode,
+								result.data[i].date_created,
+								result.data[i].team_placement,
+								result.data[i].team_details,
+								result.data[i].actions
+							]).node();
+							$(row_node).attr("id", match_id);
 						}
-						table.draw(false)
-						that.times_requested += 1
-						that.no_matches = false
-						$('#seasons_container').show();
-						$("#currently_processing").hide()
 					}
-				},
-				error: function(xhr, error, code){
-					that.tries += 1
-					that.no_matches = true
-					if(that.tries > 6){
-						$("#disconnected").show()
-					}
-					that.checkDown()
+					table.draw(false)
+					that.times_requested += 1
+					that.no_matches = false
+					$('#seasons_container').show();
+					$("#currently_processing").hide()
 				}
+			}).fail(function(data){
+				that.tries += 1
+				that.no_matches = true
+				if(that.tries > 6){
+					$("#disconnected").show()
+				}
+				that.checkDown()
 			});
 			
 		},
@@ -304,21 +301,19 @@ $(document).ready(function() {
 			
 				$.ajax({
 					type: 'GET',
-					url: `/match_rosters/${match_id}/`,
-					async: true,
-					success: function (data, status, xhr) {
-						let rosters = data.rosters
-						let i;
-						let len;
-						for (i = 0, len=rosters.length; i < len; i++){						
-							that.table_rosters[datatable_id].actual_data.push({
-								roster_rank: rosters[i].roster_rank,
-								participant_objects: rosters[i].participant_objects,
-							})
-						}
-						that.table_rosters[datatable_id].datatable.rows.add(that.table_rosters[datatable_id].actual_data).draw(false)
-						$(`#${datatable_id}`).LoadingOverlay("hide", true);
+					url: `/match_rosters/${match_id}/`
+				}).done(function(data){
+					let rosters = data.rosters
+					let i;
+					let len;
+					for (i = 0, len=rosters.length; i < len; i++){						
+						that.table_rosters[datatable_id].actual_data.push({
+							roster_rank: rosters[i].roster_rank,
+							participant_objects: rosters[i].participant_objects,
+						})
 					}
+					that.table_rosters[datatable_id].datatable.rows.add(that.table_rosters[datatable_id].actual_data).draw(false)
+					$(`#${datatable_id}`).LoadingOverlay("hide", true);
 				});
 			} else {
 				let roster_table = $(`#${datatable_id}`).DataTable({
@@ -362,12 +357,10 @@ $(document).ready(function() {
 			$.ajax({
 				type: 'GET',
 				url:'/backend_status',
-				async: true,
-				success: function (data, status, xhr) {
-					if(data.backend_status == true){
-						that.down = true
-					}
-				}     
+			}).done(function(data){
+				if(data.backend_status == true){
+					that.down = true
+				}
 			});
 		}
 		

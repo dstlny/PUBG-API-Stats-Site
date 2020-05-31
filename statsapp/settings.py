@@ -112,12 +112,6 @@ AUTH_PASSWORD_VALIDATORS = [
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-	'filters': {
-        'queries_above_300ms': {
-            '()': 'django.utils.log.CallbackFilter',
-            'callback': lambda record: record.duration > 0.3
-        },
-    },
 	'formatters': {
         'verbose': {
 			'()': 'django.utils.log.ServerFormatter',
@@ -136,23 +130,12 @@ LOGGING = {
             'class': 'logging.StreamHandler',
 			'formatter': 'verbose'
         },
-		'sql_log':{
-            'class':'logging.handlers.RotatingFileHandler',
-            'filename': './logs/long_running_sql_queries.log',
-			'formatter': 'verbose',
-			'filters': ['queries_above_300ms'],
-        }
     },
     'loggers': {
 		'': {
             'level': 'WARNING',
             'handlers': ['file', 'console'],
 			'propagate': True,
-        },
-		'django.db': {
-            'handlers': ['sql_log'],
-            'level': 'DEBUG',
-            'propagate': False,
         },
     },
 }
