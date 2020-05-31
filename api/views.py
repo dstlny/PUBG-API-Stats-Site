@@ -256,8 +256,7 @@ def retrieve_matches(request):
 				{
 					'id': roster.match.id,
 					'map': roster.match.map.name if roster.match.map else None,
-					'mode': roster.match.mode.upper(),
-					'custom_match': roster.match.match_type.title() if roster.match.match_type else 'Normal',
+					'mode': f'{roster.match.mode.upper()}<br>' + '<span class="badge badge-success">Ranked</span>' if roster.match.match_type and 'comp' in roster.match.match_type  else '<span class="badge badge-secondary">Not Ranked</span>',
 					'date_created': datetime.strftime(roster.match.created, '%d/%m/%Y %H:%M:%S'),
 					'team_details': ''.join([f"{x.player_name}: {x.kills} kill(s) | {x.damage} damage<br>" for x in roster.participants.all()]),
 					'team_placement': roster.placement,
@@ -302,8 +301,7 @@ def retrieve_matches(request):
 						{	
 							'id': roster.match.id,
 							'map': roster.match.map.name if roster.match.map else None,
-							'mode': roster.match.mode.upper(),
-							'custom_match': roster.match.match_type.title() if roster.match.match_type else 'Normal',
+							'mode': f'{roster.match.mode.upper()}<br>' + '<span class="badge badge-success">Ranked</span>' if roster.match.match_type and 'comp' in roster.match.match_type  else f'{roster.match.mode.upper()}<br><span class="badge badge-secondary">Not Ranked</span>',
 							'date_created': datetime.strftime(roster.match.created, '%d/%m/%Y %H:%M:%S'),
 							'team_details': ''.join([f"{x.player_name}: {x.kills} kill(s) | {x.damage} damage<br>" for x in roster.participants.all()]),
 							'team_placement': roster.placement,
