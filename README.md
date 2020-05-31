@@ -1,9 +1,5 @@
 # NodeJS, Django (python) and MySQL based PUBG Stats Site
-
-- Uses Django as the backend, to communicate to MySQL using the amazing Django ORM.
-- NodeJS handles rendering templates using nunjucks.
-- NodeJS simply passes requests from the front-end to the backend.
-- Python does all the heavy lifting.
+- Consists of a front-end (Fastify with Nunjucks) and a API - Django + MySQL
 
 # Getting started - things that probably need to be done
 - Any version of Python3 should work.
