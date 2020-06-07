@@ -9,7 +9,8 @@ module.exports = function (fastify, opts, done) {
 		let player_obj = {
 			player_id: req.body.player_id,
 			perspective: req.body.perspective,
-			platform: req.body.platform
+			platform: req.body.platform,
+			ranked: req.body.ranked
 		}
 
 		let api_response = await axios.post(`http://${django_ip}:8000/api/retrieve_season_stats`, player_obj)

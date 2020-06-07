@@ -34,21 +34,62 @@
 	<br>
 	<div class="card accordion" id='seasons_container'>
 			
-		<div class='card-header' id="season_stats_button" data-toggle="collapse" data-target="#season_stats" aria-expanded="true" aria-controls="season_stats">
+		<div class='card-header' id="season_stats_button" data-toggle="collapse" data-target="#season_stats_show_hide_container" aria-expanded="true" aria-controls="season_stats">
 			Show/Hide Season Stats
 		</div>
 
-		<div class="card-body collapse" id="season_stats">
-			<div class='row' id='fpp_row' style='margin-bottom: 10px'>
-				{% include "includes/solo_fpp_season_stats.html" %}
-				{% include "includes/duo_fpp_season_stats.html" %}
-				{% include "includes/squad_fpp_season_stats.html" %}
+		<div class='card-body collapse' id="season_stats_show_hide_container">
+
+			<ul class="nav nav-tabs" role="tablist">
+				<li class="nav-item">
+					<a class="nav-link active" id="normal-tab" data-toggle="tab" onclick="window.requestSeasonStats(this);" href="#normal" role="tab" aria-selected="true" aria-controls="normal">
+						Normal Stats
+					</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link" id="ranked-tab" onclick="window.requestSeasonStats(this);" data-toggle="tab" href="#ranked" role="tab" aria-selected="false" aria-controls="ranked">
+						Ranked Stats
+					</a>
+				</li>
+			</ul>
+			<div class="tab-content">
+
+				<div class="tab-pane card-body active" id="normal" role="tabpanel">
+
+					<div id="season_stats">
+						<div class='row' id='fpp_row' style='margin-bottom: 10px'>
+							{% include "includes/normal/solo_fpp_season_stats.html" %}
+							{% include "includes/normal/duo_fpp_season_stats.html" %}
+							{% include "includes/normal/squad_fpp_season_stats.html" %}
+						</div>
+						<div class="row" id='tpp_row'style='margin-top: 10px'>
+							{% include "includes/normal/solo_season_stats.html" %}
+							{% include "includes/normal/duo_season_stats.html" %}
+							{% include "includes/normal/squad_season_stats.html" %}
+						</div>
+					</div>
+
+				</div>
+
+				<div class="tab-pane card-body" id="ranked" role="tabpanel">
+
+					<div id="ranked_season_stats">
+						<div class='row' id='ranked_fpp_row' style='margin-bottom: 10px'>
+							{% include "includes/ranked/ranked_solo_fpp_season_stats.html" %}
+							{% include "includes/ranked/ranked_duo_fpp_season_stats.html" %}
+							{% include "includes/ranked/ranked_squad_fpp_season_stats.html" %}
+						</div>
+						<div class="row" id='ranked_tpp_row'style='margin-top: 10px'>
+							{% include "includes/ranked/ranked_solo_season_stats.html" %}
+							{% include "includes/ranked/ranked_duo_season_stats.html" %}
+							{% include "includes/ranked/ranked_squad_season_stats.html" %}
+						</div>
+					</div>
+
+				</div>
+
 			</div>
-			<div class="row" id='tpp_row'style='margin-top: 10px'>
-				{% include "includes/solo_season_stats.html" %}
-				{% include "includes/duo_season_stats.html" %}
-				{% include "includes/squad_season_stats.html" %}
-			</div>
+
 		</div>
 
 	</div>

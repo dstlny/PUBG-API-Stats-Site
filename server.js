@@ -3,7 +3,7 @@ const fastify = require('fastify')({
 })
 const path = require('path')
 const argv = require('minimist')(process.argv.slice(2))
-const utlity = require('./utility')
+const { checkStatusLog } = require('./utility')
 
 const django_ip = argv.django_ip || '127.0.0.1'
 
@@ -38,7 +38,7 @@ fastify.listen(7009, async function (err, address){
 		process.exit(1)
 	}
 	console.log(`NodeJS up and running on port ${address}!`)
-	utlity.checkStatusLog(django_ip)
+	checkStatusLog(django_ip)
 })
 
 module.exports.django_ip = django_ip

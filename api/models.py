@@ -17,6 +17,7 @@ class Match(models.Model):
     mode = models.CharField(max_length=255, blank=True, null=True)
     map = models.ForeignKey('Map', on_delete=models.CASCADE)
     is_custom_match = models.IntegerField(blank=True, null=True)
+    total_teams = models.IntegerField(blank=True, null=True)
     # full_match = models.BooleanField(default=False)
 
     def __str__(self):

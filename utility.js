@@ -1,6 +1,5 @@
 const axios = require('axios')
 
-
 async function checkStatusPromise(django_ip){
 	return await axios.get(`http://${django_ip}:8000/api/status`)
 	.then(api_response => {

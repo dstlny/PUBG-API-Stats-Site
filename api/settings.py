@@ -13,9 +13,11 @@ LIFETIME_FILTER = 'players/$accountId/seasons/lifetime'
 SEASON_FILTER = 'players/$accountId/seasons/$seasonID'
 LIST_TOURNAMENTS_FILTER = 'tournaments/'
 TOURNAMENTS_FILTER = 'tournaments/$tourneyID'
+SEASON_LIST_URL = 'seasons'
 
 BASE_API_URL = 'https://api.pubg.com/'
 PC_SHARD = "shards/steam/"
+STADIA_SHARD = "shards/stadia/"
 XBOX_SHARD = "shards/xbox/"
 PLAYSTATION_SHARD = "shards/psn/"
 KAKAO_SHARD = "shards/kakao/"

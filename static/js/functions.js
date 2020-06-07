@@ -1,17 +1,22 @@
 'use strict';
 var table; 
 
+
 $(document).ready(function() {
 
 	var app = {	
 		table_rosters: {},
-		season_requested: false,
+		season_requested : {
+			ranked: false,
+			normal: false
+		},
 		times_requested: 0,
 		seen_match_ids: [],
 		down: false,
 		tries: 0,
 		no_matches: false,
 		retrieved: false,
+		ranked_showing: false,
 
 		serialiseForm: function(){
 			return $('#search_form').serialize();
@@ -67,7 +72,7 @@ $(document).ready(function() {
 				that.getResults()
 			}, 20000);
 	
-			that.seasonStatToggle(that.getPerspective())
+			that.seasonStatToggle(that.getPerspective(), this.ranked_showing)
 		},
 		clearSeasonStats: function(){
 			var elements = ['duo_season_stats','duo_season_matches','duo_season_damage__figure','duo_season_damage__text','duo_season_headshots__figure','duo_season_headshots__text','duo_season_kills__figure','duo_season_kills__text','duo_season_longest_kill__figure','duo_season_longest_kill__text','duo_fpp_season_stats','duo_fpp_season_matches','duo_fpp_season_damage__figure','duo_fpp_season_damage__text','duo_fpp_season_headshots__figure','duo_fpp_season_headshots__text','duo_fpp_season_kills__figure','duo_fpp_season_kills__text','duo_fpp_season_longest_kill__figure','duo_fpp_season_longest_kill__text','solo_fpp_season_stats','solo_fpp_season_matches','solo_fpp_season_damage__figure','solo_fpp_season_damage__text','solo_fpp_season_headshots__figure','solo_fpp_season_headshots__text','solo_fpp_season_kills__figure','solo_fpp_season_kills__text','solo_fpp_season_longest_kill__figure','solo_fpp_season_longest_kill__text','solo_season_stats','solo_season_matches','solo_season_damage__figure','solo_season_damage__text','solo_season_headshots__figure','solo_season_headshots__text','solo_season_kills__figure','solo_season_kills__text','solo_season_longest_kill__figure','solo_season_longest_kill__text','squad_season_stats','squad_season_matches','squad_season_damage__figure','squad_season_damage__text','squad_season_headshots__figure','squad_season_headshots__text','squad_season_kills__figure','squad_season_kills__text','squad_season_longest_kill__figure','squad_season_longest_kill__text','squad_fpp_season_stats','squad_fpp_season_matches','squad_fpp_season_damage__figure','squad_fpp_season_damage__text','squad_fpp_season_headshots__figure','squad_fpp_season_headshots__text','squad_fpp_season_kills__figure','squad_fpp_season_kills__text','squad_fpp_season_longest_kill__figure','squad_fpp_season_longest_kill__text']
@@ -95,21 +100,32 @@ $(document).ready(function() {
 			$("#disconnected").hide();
 			$("#currently_processing").hide();
 		},
-		retrievePlayerSeasonStats: function(){
+		retrievePlayerSeasonStats: function(ranked){
 			let that = this
-	
-			$("#season_stats").LoadingOverlay("show");
+			
+			if(ranked){
+				$("#ranked_season_stats").LoadingOverlay("show");
+			} else {
+				$("#season_stats").LoadingOverlay("show");
+			}
 
 			$.ajax({
 				data: {
 					player_id: that.getPlayerId(),
 					platform: that.getPlatform(),
 					perspective: that.getPerspective(),
+					ranked: ranked
 				},
 				type: 'POST',
 				url: that.getSeasonsEndpoint()
 			}).done(function(data){
-				that.season_requested = true
+
+				if(ranked){
+					that.season_requested.ranked = true
+				} else {
+					that.season_requested.normal = true
+				}
+
 				let len = data.length;
 				let key;
 
@@ -119,7 +135,12 @@ $(document).ready(function() {
 					}
 				}
 
-				$("#season_stats").LoadingOverlay("hide", true);
+
+				if(ranked){
+					$("#ranked_season_stats").LoadingOverlay("hide", true);
+				} else {
+					$("#season_stats").LoadingOverlay("hide", true);
+				}
 				$('#seasons_container').show();
 			}).fail(function(data){
 				console.log(data)
@@ -136,13 +157,20 @@ $(document).ready(function() {
 				if(last_player_name !== undefined && typeof last_player_name !== 'undefined'){
 					if(player_name.trim() == last_player_name.trim()){
 						that.retrieved = true
-						if(that.season_requested)
-							that.season_requested = true
-						else
-							that.season_requested = false
+						if(that.season_requested.ranked){
+							that.season_requested.ranked = true
+						} else {
+							that.season_requested.ranked = false
+						}
+						if(that.season_requested.normal){
+							that.season_requested.normal = true
+						} else {
+							that.season_requested.normal = false
+						}
 					} else {
 						that.retrieved = false
-						that.season_requested = false
+						that.season_requested.ranked = false
+						that.season_requested.normal = false
 						$('#results_datatable').DataTable().clear().draw();
 						that.seen_match_ids = []
 						that.table_rosters = {}
@@ -150,7 +178,8 @@ $(document).ready(function() {
 					}
 				} else {
 					that.retrieved = false
-					that.season_requested = false
+					that.season_requested.ranked = false
+					that.season_requested.normal = false
 					$('#results_datatable').DataTable().clear().draw();
 					that.seen_match_ids = []
 					that.table_rosters = {}
@@ -174,11 +203,11 @@ $(document).ready(function() {
 						$("#error").hide()
 						if(data.no_new_matches){
 							let error = data.error || data.message
-							$("#error").show()
+							$("#error").slideDown()
 							$("#error_message").text(error);
 							that.loadResultsDataTable();	
 						} else {
-							$("#currently_processing").show()
+							$("#currently_processing").slideDown()
 							$('#currently_processing_message').text('Currently processing player, please bear with us...')
 							setTimeout(function(){
 								that.loadResultsDataTable();
@@ -187,7 +216,7 @@ $(document).ready(function() {
 					}
 				} else if(data.error){
 					$("#currently_processing").hide()
-					$("#error").show()
+					$("#error").slideDown()
 					$("#error_message").text(data.error);
 				}
 			}).fail(function(result){
@@ -337,16 +366,31 @@ $(document).ready(function() {
 			if(!this.no_matches){
 				switch(perspective){
 					case 'fpp':
-						$('#fpp_row').show()
-						$('#tpp_row').hide()
+						if(this.ranked_showing){
+							$('#fpp_row').show()
+							$('#tpp_row').hide()
+						} else {
+							$('#ranked_fpp_row').show()
+							$('#ranked_tpp_row').hide()
+						}
 						break;
 					case 'tpp':
-						$('#tpp_row').show()
-						$('#fpp_row').hide()
+						if(this.ranked_showing){
+							$('#ranked_tpp_row').show()
+							$('#ranked_fpp_row').hide()
+						} else {
+							$('#tpp_row').show()
+							$('#fpp_row').hide()
+						}
 						break;
 					default:
-						$('#fpp_row').show()
-						$('#tpp_row').show()
+						if(this.ranked_showing){
+							$('#ranked_tpp_row').show()
+							$('#ranked_fpp_row').show()
+						} else {
+							$('#tpp_row').show()
+							$('#fpp_row').show()
+						}
 						break;
 				}
 			}
@@ -443,11 +487,35 @@ $(document).ready(function() {
 
 	app.hideInitial();
 
+	function requestSeasonStats(self){
+		let id = self.id
+		let is_ranked = false;
+
+		if(id == 'ranked-tab'){
+			is_ranked = true
+			app.ranked_showing = true
+		} else {
+			app.ranked_showing = false
+		}
+
+		if(is_ranked){
+			if(!app.season_requested.ranked){
+				app.retrievePlayerSeasonStats(is_ranked)
+			}	
+		} else {
+			if(!app.season_requested.normal){
+				app.retrievePlayerSeasonStats(is_ranked)
+			}
+		}
+	}
+
+	window.requestSeasonStats = requestSeasonStats
+
 	$(document).on('submit', 'form#search_form', function(event){
 
-		$("#season_stats_button").click(function() {
-			if(!app.season_requested){
-				app.retrievePlayerSeasonStats()
+		$("#season_stats_button").click(function(self) {
+			if(!app.season_requested.normal){
+				app.retrievePlayerSeasonStats(false)
 			}
 		});
 

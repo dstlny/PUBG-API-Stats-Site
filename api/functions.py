@@ -60,8 +60,14 @@ def build_url(platform):
 			api_settings.BASE_API_URL,
 			api_settings.TOURNAMENT_SHARD
 		)
+	elif 'stad' in platform.strip().lower():
+		return "{}{}".format(
+			api_settings.BASE_API_URL,
+			api_settings.STADIA_SHARD
+		)
 
 def get_platform(url):
+
 	if 'steam' in url.strip().lower():
 		return 'steam'
 	elif 'xbox' in url.strip().lower():
@@ -70,6 +76,8 @@ def get_platform(url):
 		return 'psn'
 	elif "kakao" in url.strip().lower():
 		return 'kakao'
+	elif 'stadia' in url.strip().lower():
+		return 'stadia'
 	elif "tour" in url.strip().lower():
 		return 'tour'
 
@@ -86,12 +94,20 @@ def build_player_account_id_url(base_url, player_id):
 		api_settings.PLAYER_ACCOUNT_FILTER
 	).replace('$accountId', player_id)
 
-def build_season_url(base_url, season_id, player_id):
-	return "{}{}".format(
-		base_url,
-		api_settings.SEASON_FILTER,
-	).replace('$accountId', player_id).replace('$seasonID', season_id) 
+def build_season_url(base_url, season_id, player_id, is_ranked):
 
+	if is_ranked:
+		return "{}{}{}".format(
+			base_url,
+			api_settings.SEASON_FILTER,
+			'/ranked'
+		).replace('$accountId', player_id).replace('$seasonID', season_id) 
+	else:
+		return "{}{}".format(
+			base_url,
+			api_settings.SEASON_FILTER
+		).replace('$accountId', player_id).replace('$seasonID', season_id) 
+		
 def build_lifetime_url(base_url, player_id):
 	return "{}{}".format(
 		base_url,
@@ -217,6 +233,19 @@ def parse_chunked_player_matches(chunk, player_id, platform_url):
 	platform = get_platform(platform_url)
 	player_currently_processing_cache_key = '{}_{}_current_processing'.format(player_id, platform)
 	cache.set(player_currently_processing_cache_key, False, 60)
+
+def player_placement_format(total_teams, placement):
+
+	if total_teams and placement:
+		if placement == 1:
+			return f'<span class="badge badge-success">{placement}/{total_teams}</span>'
+		else:
+			return f'<span class="badge badge-danger">{placement}/{total_teams}</span>'
+	elif not total_teams and placement:
+		if placement == 1:
+			return f'<span class="badge badge-success">{placement}/100</span>'
+		else:
+			return f'<span class="badge badge-danger">{placement}/100</span>'
 	
 def parse_player_matches(match_json_list, player_id, platform_url):
 
@@ -243,7 +272,6 @@ def parse_player_matches(match_json_list, player_id, platform_url):
 			start_time = time.time()
 
 			match_date = datetime.strptime(match['data']['attributes']['createdAt'].replace('Z', ''), "%Y-%m-%dT%H:%M:%S")
-
 			match_date = make_aware(match_date)
 
 			match_map =  get_map_name(match['data']['attributes']['mapName'])
@@ -275,9 +303,14 @@ def parse_player_matches(match_json_list, player_id, platform_url):
 				mode=match_mode,
 				api_url=match_url,
 				is_custom_match=match_custom,
-				match_type=match_type
+				match_type=match_type,
+				total_teams=len([
+					x for x in match['included']
+					if x['type'] == 'participant'
+				])
 			)
 			this_match.save()
+
 
 			current_player_parsed = [
 				x for x in match['included']
@@ -393,33 +426,7 @@ def get_player_matches(platform_url, player_response):
 	player_currently_processing_cache_key = '{}_{}_current_processing'.format(player_id, platform)
 	cache.set(player_currently_processing_cache_key, False, 60)
 
-def populate_seasons():
-	platforms = [
-		'steam',
-		'xbox',
-		'psn'
-	]
-
-	for platform in platforms:
-		url = build_url(platform)
-		url = "{}{}".format(url, 'seasons')
-		request = make_request(url)
-
-		for season in request.get('data'):
-			api_id = season.get('id')
-			attributes = season.get('attributes')
-			is_current_season = attributes.get('isCurrentSeason')
-			is_off_season = attributes.get('isOffseason')
-
-			Season.objects.get_or_create(
-				api_id=api_id,
-				is_current=is_current_season,
-				is_off_season=is_off_season,
-				api_url=url,
-				platform=platform
-			)
-
-def retrieve_player_season_stats(player_id, platform, ranked=None):
+def retrieve_player_season_stats(player_id, platform, is_ranked=False):
 
 	platform_url = build_url(platform)
 
@@ -432,7 +439,8 @@ def retrieve_player_season_stats(player_id, platform, ranked=None):
 		season_url = build_season_url(
 			base_url=platform_url,
 			season_id=current_season.api_id,
-			player_id=player_id
+			player_id=player_id,
+			is_ranked=is_ranked
 		)
 
 		season_request = make_request(season_url)
@@ -441,17 +449,21 @@ def retrieve_player_season_stats(player_id, platform, ranked=None):
 		season_id = current_season.id
 
 		if season_request:
+
 			attributes = season_request.get('data').get('attributes')
-			game_mode_stats = attributes.get('gameModeStats')
+			game_mode_stats = attributes.get('gameModeStats') or attributes.get('rankedGameModeStats')
 
 			## we should really only save the details that we do not have
 			game_modes = [
 				game_mode for game_mode in game_mode_stats if not(player_season_stats_queryset.filter(
 					player=current_player,
 					season=current_season,
-					mode=game_mode
+					mode=game_mode,
+					is_ranked=is_ranked
 				).exists())
 			]
+
+			print(season_request)
 
 			for game_mode in game_modes:
 				stats =  game_mode_stats.get(game_mode)
@@ -529,7 +541,8 @@ def retrieve_player_season_stats(player_id, platform, ranked=None):
 					win_points=winPoints,
 					wins=wins,
 					player_id=player_id,
-					season_id=season_id
+					season_id=season_id,
+					is_ranked=is_ranked
 				).save()
 
 def get_match_telemetry_from_match(match_json, match, return_early=False):

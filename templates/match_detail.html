@@ -91,13 +91,12 @@
 		create_circles = function(){
 
 			for(var i = 0, len=x_y_co_ords.length; i < len; i++){
-				let coordinate_object = x_y_co_ords[i];
 				markers.push(new Circle({
-					x: coordinate_object.x,
-					y: coordinate_object.y,
+					x:  x_y_co_ords[i].x,
+					y:  x_y_co_ords[i].y,
 					fill: 'red',
 					radius: 0.5,
-					id: coordinate_object.id
+					id:  x_y_co_ords[i].id
 				}))
 			}
 
@@ -183,7 +182,8 @@
 					let item_y = marker.y / this_scale
 
 					if (intersects(x, y, item_x, item_y, marker.radius)) {
-						$(`#${marker.id}`).css({ 'top': evt.clientY-140+ "px", 'left': evt.clientX-80 + "px", 'position': 'absolute', 'border': '1px solid black', 'padding': '5px' });
+						page_y = evt.pageY-60
+						$(`#${marker.id}`).css({ 'top':`${page_y}px`, 'left': `${x}px`, 'position': 'absolute', 'border': '1px solid black', 'padding': '5px' });
 						$(`#${marker.id}`).show();
 					} else {
 						$(`#${marker.id}`).hide();
@@ -215,8 +215,6 @@
 		canvas.addEventListener('DOMMouseScroll', handleScroll, false);
 		canvas.addEventListener('mousewheel', handleScroll, false);
 
-		// Adds ctx.getTransform() - returns an SVGMatrix
-		// Adds ctx.transformedPoint(x,y) - returns an SVGPoint
 		function trackTransforms(ctx) {
 			var svg = document.createElementNS("http://www.w3.org/2000/svg", 'svg');
 			var xform = svg.createSVGMatrix();

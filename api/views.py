@@ -6,9 +6,9 @@ import collections
 from api.settings import API_HEADER
 from api.functions import (
 	build_url, build_lifetime_url, make_request, correct_perspective, correct_mode,
-	build_player_url, get_player_matches, retrieve_player_season_stats, populate_seasons, build_player_account_id_url,
+	build_player_url, get_player_matches, retrieve_player_season_stats, build_player_account_id_url,
 	make_request, build_match_url, get_match_telemetry_from_match, get_match_data, create_leaderboard_for_match, get_player_match_id,
-	chunk_matches, parse_player_matches, parse_chunked_player_matches
+	chunk_matches, parse_player_matches, parse_chunked_player_matches, player_placement_format
 )
 
 from api.models import *
@@ -256,10 +256,10 @@ def retrieve_matches(request):
 				{
 					'id': roster.match.id,
 					'map': roster.match.map.name if roster.match.map else None,
-					'mode': f'{roster.match.mode.upper()}<br>' + '<span class="badge badge-success">Ranked</span>' if roster.match.match_type and 'comp' in roster.match.match_type  else '<span class="badge badge-secondary">Not Ranked</span>',
+					'mode': f'{roster.match.mode.upper()}<br><span class="badge badge-success">Ranked</span>' if roster.match.match_type and roster.match.match_type == 'competitive' else f'{roster.match.mode.upper()}<br><span class="badge badge-secondary">Not Ranked</span>',
 					'date_created': datetime.strftime(roster.match.created, '%d/%m/%Y %H:%M:%S'),
 					'team_details': ''.join([f"{x.player_name}: {x.kills} kill(s) | {x.damage} damage<br>" for x in roster.participants.all()]),
-					'team_placement': roster.placement,
+					'team_placement': player_placement_format(roster.match.total_teams, roster.placement),
 					'actions': f'<a href="/match_detail/{roster.match.api_id}/" class="btn btn-link btn-sm active" role="button">View Match</a>'
 				} for roster in match_data
 			]
@@ -304,7 +304,7 @@ def retrieve_matches(request):
 							'mode': f'{roster.match.mode.upper()}<br>' + '<span class="badge badge-success">Ranked</span>' if roster.match.match_type and 'comp' in roster.match.match_type  else f'{roster.match.mode.upper()}<br><span class="badge badge-secondary">Not Ranked</span>',
 							'date_created': datetime.strftime(roster.match.created, '%d/%m/%Y %H:%M:%S'),
 							'team_details': ''.join([f"{x.player_name}: {x.kills} kill(s) | {x.damage} damage<br>" for x in roster.participants.all()]),
-							'team_placement': roster.placement,
+							'team_placement': player_placement_format(roster.match.total_teams, roster.placement),
 							'actions': f'<a href="/match_detail/{roster.match.api_id}/" class="btn btn-link btn-sm active" role="button">View Match</a>'
 						} for roster in match_data
 					],
@@ -341,50 +341,75 @@ def retrieve_matches(request):
 	return Response(ajax_data)
 
 @api_view(['GET', 'POST'])
-def retrieve_season_stats(request, ranked=None):
+def retrieve_season_stats(request):
 
 	body = request.data
 
 	player_id = body.get('player_id', None)
-
 	platform = body.get('platform', None)
+	ranked = body.get('ranked', None)
+
+	if ranked == 'true':
+		is_ranked = True
+	else:
+		is_ranked = False
 
 	player = get_object_or_404(Player, api_id=player_id)
 
-	player_cache_key = '{}_season_data'.format(player_id)
+	if is_ranked:
+		player_cache_key = 'ranked_{}_season_data'.format(player_id)
+	else:
+		player_cache_key = '{}_season_data'.format(player_id)
+
 	cached_ajax_data = cache.get(player_cache_key, None)
 
 	if not cached_ajax_data:
-		retrieve_player_season_stats(player_id,  platform)
+		retrieve_player_season_stats(player_id,  platform, is_ranked)
 
-		season_stats_queryset = PlayerSeasonStats.objects.only(
-			'player',
-			'season',
-			'mode'
-		).select_related('season')
-
-		season_stats = season_stats_queryset.filter(
+		season_stats_queryset = PlayerSeasonStats.objects.filter(
 			player=player,
 			season__is_current=True,
 			season__platform=platform,
-		)
+			is_ranked=is_ranked
+		).select_related('season')
 
-		ajax_data = [
-			{
-				f"{x.mode.lower().replace('-', '_')}_season_stats": correct_mode(x.mode.replace('_', ' ')).upper(),
-				f"{x.mode.lower().replace('-', '_')}_season_matches": "{} {}".format(x.rounds_played, 'Matches Played'),
-				f"{x.mode.lower().replace('-', '_')}_season_kills__text": 'Kills',
-				f"{x.mode.lower().replace('-', '_')}_season_kills__figure": x.kills,
-				f"{x.mode.lower().replace('-', '_')}_season_damage__text": 'Damage Dealt',
-				f"{x.mode.lower().replace('-', '_')}_season_damage__figure": str(x.damage_dealt),
-				f"{x.mode.lower().replace('-', '_')}_season_longest_kill__text": 'Longest Kill',
-				f"{x.mode.lower().replace('-', '_')}_season_longest_kill__figure": str(x.longest_kill),
-				f"{x.mode.lower().replace('-', '_')}_season_headshots__text": 'Headshot kills',
-				f"{x.mode.lower().replace('-', '_')}_season_headshots__figure": x.headshot_kills
-			} for x in season_stats
-		]
+		if is_ranked:
 
-		cache.set(player_cache_key, ajax_data, 60*20)
+			ajax_data = [
+				{
+					f"ranked_{x.mode.lower().replace('-', '_')}_season_stats": correct_mode(x.mode.replace('_', ' ')).upper(),
+					f"ranked_{x.mode.lower().replace('-', '_')}_season_matches": "{} {}".format(x.rounds_played, 'Matches Played'),
+					f"ranked_{x.mode.lower().replace('-', '_')}_season_kills__text": 'Kills',
+					f"ranked_{x.mode.lower().replace('-', '_')}_season_kills__figure": x.kills,
+					f"ranked_{x.mode.lower().replace('-', '_')}_season_damage__text": 'Damage Dealt',
+					f"ranked_{x.mode.lower().replace('-', '_')}_season_damage__figure": str(x.damage_dealt),
+					f"ranked_{x.mode.lower().replace('-', '_')}_season_longest_kill__text": 'Longest Kill',
+					f"ranked_{x.mode.lower().replace('-', '_')}_season_longest_kill__figure": str(x.longest_kill),
+					f"ranked_{x.mode.lower().replace('-', '_')}_season_headshots__text": 'Headshot kills',
+					f"ranked_{x.mode.lower().replace('-', '_')}_season_headshots__figure": x.headshot_kills
+				} for x in season_stats_queryset
+			]
+
+		else:
+
+			ajax_data = [
+				{
+					f"{x.mode.lower().replace('-', '_')}_season_stats": correct_mode(x.mode.replace('_', ' ')).upper(),
+					f"{x.mode.lower().replace('-', '_')}_season_matches": "{} {}".format(x.rounds_played, 'Matches Played'),
+					f"{x.mode.lower().replace('-', '_')}_season_kills__text": 'Kills',
+					f"{x.mode.lower().replace('-', '_')}_season_kills__figure": x.kills,
+					f"{x.mode.lower().replace('-', '_')}_season_damage__text": 'Damage Dealt',
+					f"{x.mode.lower().replace('-', '_')}_season_damage__figure": str(x.damage_dealt),
+					f"{x.mode.lower().replace('-', '_')}_season_longest_kill__text": 'Longest Kill',
+					f"{x.mode.lower().replace('-', '_')}_season_longest_kill__figure": str(x.longest_kill),
+					f"{x.mode.lower().replace('-', '_')}_season_headshots__text": 'Headshot kills',
+					f"{x.mode.lower().replace('-', '_')}_season_headshots__figure": x.headshot_kills
+				} for x in season_stats_queryset
+			]
+
+
+		if player_cache_key != 'ranked_{}_season_data'.format(player_id):
+			cache.set(player_cache_key, ajax_data, 60*20)
 
 	else:
 		ajax_data = cached_ajax_data
