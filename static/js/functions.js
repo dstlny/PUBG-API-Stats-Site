@@ -1,7 +1,6 @@
 'use strict';
 var table; 
 
-
 $(document).ready(function() {
 
 	var app = {	
@@ -79,7 +78,10 @@ $(document).ready(function() {
 			let len;
 			for (let i = 0, len=elements.length; i < len; i++){
 				document.getElementById(elements[i]).innerHTML = ''
-		
+
+				if(elements[i].includes('squad')){
+					document.getElementById(`ranked_`+elements[i]).innerHTML = ''
+				}
 			}
 		},
 		clearAll: function(window){
@@ -96,7 +98,7 @@ $(document).ready(function() {
 			function noop(){}
 		},
 		hideInitial: function (){
-			$('#seasons_container').hide();
+			$('#seasons_container').hide()
 			$("#disconnected").hide();
 			$("#currently_processing").hide();
 		},
@@ -129,13 +131,37 @@ $(document).ready(function() {
 				let len = data.length;
 				let key;
 
+				let extras = []
+
 				for (let i = 0; i < len; i++){
 					for(key in data[i]){
-						document.getElementById(key).innerHTML = data[i][key]
+						if(key !== 'container' && key !== 'text' && key !== 'keys'){
+							document.getElementById(key).innerHTML = data[i][key]
+						} else {
+							if(key == 'container'){
+								extras.push(data[i])
+							}
+						}
 					}
 				}
 
-
+				if(extras.length > 0){
+					let len = extras.length;
+					for (let i = 0; i < len; i++){
+						$(`#${extras[i].container}`).LoadingOverlay("show", {
+							background: "rgba(255, 255, 255, 1)",
+							image: false,
+							fontawesome: `fa fa-exclamation-circle`,
+							fontawesomeAutoResize: true,
+							text: `${extras[i].text}`,
+							textAutoResize: true,
+							size: 40,
+							maxSize: 40,
+							minSize: 40
+						});
+					}
+				}
+					
 				if(ranked){
 					$("#ranked_season_stats").LoadingOverlay("hide", true);
 				} else {
@@ -169,6 +195,7 @@ $(document).ready(function() {
 						}
 					} else {
 						that.retrieved = false
+						$('.loadingoverlay').remove()
 						that.season_requested.ranked = false
 						that.season_requested.normal = false
 						$('#results_datatable').DataTable().clear().draw();
@@ -178,6 +205,7 @@ $(document).ready(function() {
 					}
 				} else {
 					that.retrieved = false
+					$('.loadingoverlay').remove()
 					that.season_requested.ranked = false
 					that.season_requested.normal = false
 					$('#results_datatable').DataTable().clear().draw();
@@ -290,7 +318,14 @@ $(document).ready(function() {
 					table.draw(false)
 					that.times_requested += 1
 					that.no_matches = false
+					let ranked_tab = $('#ranked-tab')
+					let normal_tab = $('#normal-tab')
+					$('.collapse').collapse('hide');
 					$('#seasons_container').show();
+					ranked_tab.removeClass('active')
+					ranked_tab.attr('aria-selected', false)
+					normal_tab.addClass('active')
+					normal_tab.attr('aria-selected', true)
 					$("#currently_processing").hide()
 				}
 			}).fail(function(data){
@@ -301,7 +336,6 @@ $(document).ready(function() {
 				}
 				that.checkDown()
 			});
-			
 		},
 		getRosterForMatch: function(match_id, datatable_id){
 			
@@ -424,7 +458,7 @@ $(document).ready(function() {
 			},
 			{ width: '10%' }, // map
 			{ width: '10%' }, // mode
-			{ width: '15%', type: "datetime" }, // created
+			{ width: '15%', type: "date" }, // created
 			{ width: '10%' }, // placement
 			{ width: '30%' }, // details
 			{ width: '20%' }, // actions

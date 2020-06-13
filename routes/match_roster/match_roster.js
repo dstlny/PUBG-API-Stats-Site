@@ -12,7 +12,8 @@ module.exports = function (fastify, opts, done) {
 		
 		if (api_response.status == 200) {
 			return res.send({
-				rosters: api_response.data
+				rosters: api_response.data,
+				base_address: fastify.base_address
 			})
 		} else {
 			console.log(api_response)

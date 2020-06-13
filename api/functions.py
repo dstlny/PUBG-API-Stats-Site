@@ -28,6 +28,8 @@ from django.db.models import Count
 
 from django.core.cache import cache
 
+import api.settings as api_settings
+
 session = requests.Session()
 
 import logging
@@ -230,8 +232,7 @@ def chunk_matches(matches, chunk):
 
 def parse_chunked_player_matches(chunk, player_id, platform_url):
 	parse_player_matches(chunk, player_id, platform_url)
-	platform = get_platform(platform_url)
-	player_currently_processing_cache_key = '{}_{}_current_processing'.format(player_id, platform)
+	player_currently_processing_cache_key = api_settings.PLAYER_CURRENTLY_PROCESSING_CACHE_KEY.format(player_id, get_platform(platform_url))
 	cache.set(player_currently_processing_cache_key, False, 60)
 
 def player_placement_format(total_teams, placement):
@@ -422,8 +423,7 @@ def parse_player_matches(match_json_list, player_id, platform_url):
 def get_player_matches(platform_url, player_response):
 	player_id, player_matches = parse_player_object(platform_url, player_response)
 	parse_player_matches(player_matches, player_id, platform_url)
-	platform = get_platform(platform_url)
-	player_currently_processing_cache_key = '{}_{}_current_processing'.format(player_id, platform)
+	player_currently_processing_cache_key = api_settings.PLAYER_CURRENTLY_PROCESSING_CACHE_KEY.format(player_id, get_platform(platform_url))
 	cache.set(player_currently_processing_cache_key, False, 60)
 
 def retrieve_player_season_stats(player_id, platform, is_ranked=False):
@@ -462,8 +462,6 @@ def retrieve_player_season_stats(player_id, platform, is_ranked=False):
 					is_ranked=is_ranked
 				).exists())
 			]
-
-			print(season_request)
 
 			for game_mode in game_modes:
 				stats =  game_mode_stats.get(game_mode)

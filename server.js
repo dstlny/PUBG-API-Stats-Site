@@ -6,8 +6,10 @@ const argv = require('minimist')(process.argv.slice(2))
 const { checkStatusLog } = require('./utility')
 
 const django_ip = argv.django_ip || '127.0.0.1'
+const base_address = argv.base_address || '127.0.0.1'
 
 fastify.decorate('django_ip', django_ip)
+fastify.decorate('base_address', base_address)
 
 fastify.register(require('fastify-formbody'))
 fastify.register(require('point-of-view'), {

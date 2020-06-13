@@ -13,7 +13,8 @@ module.exports = function (fastify, opts, done) {
 		
 		if (api_response.status == 200) {
 			return res.view('match_detail.html', {
-				telemetry_data: api_response.data.telemetry_data
+				telemetry_data: api_response.data.telemetry_data,
+				base_address: fastify.base_address
 			})
 		} else {
 			console.log(api_response)

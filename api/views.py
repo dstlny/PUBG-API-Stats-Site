@@ -3,7 +3,6 @@ from django.http import HttpResponse, JsonResponse, HttpRequest
 
 import collections
 
-from api.settings import API_HEADER
 from api.functions import (
 	build_url, build_lifetime_url, make_request, correct_perspective, correct_mode,
 	build_player_url, get_player_matches, retrieve_player_season_stats, build_player_account_id_url,
@@ -18,11 +17,8 @@ from datetime import datetime
 from datetime import timedelta
 from django.utils import timezone
 
-## try import orjson, fallback to normal json module upon failure
-try:
-	import orjson as json
-except:
-	import json
+import json as old_json
+import orjson as json
 
 from django.core.cache import cache
 from django.shortcuts import get_object_or_404
@@ -35,12 +31,12 @@ from dateutil.parser import parse
 import ast
 from django.db.models import Q
 
-import multiprocessing
-
 from django.utils.timesince import timesince
 
 import threading
 import logging
+
+import api.settings as api_settings
 
 logger = logging.getLogger('django')
 
@@ -63,9 +59,9 @@ def search(request):
 	game_mode = body.get('game_mode', None)
 	platform = body.get('platform', None)
 
-	player_platform_url_cache_key = '{}_{}_platform_url'.format(player_name, platform)
-	player_player_url_cache_key = '{}_{}_player_url'.format(player_name, platform)
-	player_player_response_cache_key = '{}_{}_player_response'.format(player_name, platform)
+	player_platform_url_cache_key = api_settings.PLAYER_PLATFORM_URL_CACHE_KEY.format(player_name, platform)
+	player_player_url_cache_key =  api_settings.PLAYER_URL_CACHE_KEY.format(player_name, platform)
+	player_player_response_cache_key = api_settings.PLAYER_RESPONSE_CACHE_KEY.format(player_name, platform)
 
 	cached_platform_url = cache.get(player_platform_url_cache_key, None)
 
@@ -123,7 +119,7 @@ def search(request):
 
 			if length_of_matches > 0:
 
-				player_currently_processing_cache_key = '{}_{}_current_processing'.format(player_id, platform)
+				player_currently_processing_cache_key = api_settings.PLAYER_CURRENTLY_PROCESSING_CACHE_KEY.format(player_id, platform)
 				currently_processing = cache.get(player_currently_processing_cache_key, None)
 
 				if not currently_processing:
@@ -173,14 +169,14 @@ def retrieve_matches(request):
 	times_requested = body.get('times_requested', None)
 	seen_match_ids = body.get('seen_match_ids', None)
 
-	player_cache_key = '{}_match_data'.format(player_id)
+	player_match_data_cache = api_settings.PLAYER_MATCH_DATA_CACHE_KEY.format(player_id)
 
 	if times_requested:
 		times_requested = int(times_requested)
 
 	ajax_data = {}
 
-	cached_ajax_data = cache.get(player_cache_key, None)
+	cached_ajax_data = cache.get(player_match_data_cache, None)
 
 	current_player = Player.objects.filter(api_id=player_id).first()
 
@@ -267,7 +263,7 @@ def retrieve_matches(request):
 			new_ajax_data['data'] = data
 			new_ajax_data['match_ids'] = cached_match_ids
 
-			cache.set(player_cache_key, new_ajax_data, 60)
+			cache.set(player_match_data_cache, new_ajax_data, 60)
 
 			if request_again and new_ajax_data:
 				return Response(new_ajax_data)
@@ -312,11 +308,11 @@ def retrieve_matches(request):
 					'match_ids': match_ids
 				}
 
-				if cache.has_key(player_cache_key) and redo_cache:
-					cache.delete(player_cache_key)
+				if cache.has_key(player_match_data_cache) and redo_cache:
+					cache.delete(player_match_data_cache)
 
 				if redo_cache:
-					cache.set(player_cache_key, ajax_data, 60)
+					cache.set(player_match_data_cache, ajax_data, 60)
 
 			else:
 
@@ -357,14 +353,16 @@ def retrieve_season_stats(request):
 	player = get_object_or_404(Player, api_id=player_id)
 
 	if is_ranked:
-		player_cache_key = 'ranked_{}_season_data'.format(player_id)
+		season_stats_cache_key = api_settings.PLAYER_RANKED_SEASON_STATS_CACHE_KEY.format(player_id)
 	else:
-		player_cache_key = '{}_season_data'.format(player_id)
+		season_stats_cache_key = api_settings.PLAYER_SEASON_STATS_CACHE_KEY.format(player_id)
 
-	cached_ajax_data = cache.get(player_cache_key, None)
+	cached_ajax_data = cache.get(season_stats_cache_key, None)
 
 	if not cached_ajax_data:
 		retrieve_player_season_stats(player_id,  platform, is_ranked)
+
+		all_game_modes = list(set(PlayerSeasonStats.objects.filter(mode__icontains='squad').values_list('mode', flat=True)))
 
 		season_stats_queryset = PlayerSeasonStats.objects.filter(
 			player=player,
@@ -372,6 +370,8 @@ def retrieve_season_stats(request):
 			season__platform=platform,
 			is_ranked=is_ranked
 		).select_related('season')
+
+		modes_not_added = []
 
 		if is_ranked:
 
@@ -407,9 +407,34 @@ def retrieve_season_stats(request):
 				} for x in season_stats_queryset
 			]
 
+		
+		if len(ajax_data) < 6:
+			modes_not_added = []
+			for x in all_game_modes:
+				for y in ajax_data:
+					if is_ranked:
+						dict_key = f"ranked_{x.lower().replace('-', '_')}_season_stats"
+					else:
+						dict_key = f"{x.lower().replace('-', '_')}_season_stats"
+					if dict_key not in y:
+					 	modes_not_added.append(x)
 
-		if player_cache_key != 'ranked_{}_season_data'.format(player_id):
-			cache.set(player_cache_key, ajax_data, 60*20)
+			if ranked:
+				ajax_data += [
+					{
+						'container' :f"ranked_{x.lower().replace('-', '_')}_season_stats_container",
+						'text': f"No ranked data available for {correct_mode(x.replace('_', ' ')).upper()}"
+					} for x in modes_not_added
+				]
+			else:
+				ajax_data += [
+					{
+						'container' :f"{x.lower().replace('-', '_')}_season_stats_container",
+						'text':  f"No data available for {correct_mode(x.replace('_', ' ')).upper()}"
+					} for x in modes_not_added
+				]
+
+		cache.set(season_stats_cache_key, ajax_data, 60*20)
 
 	else:
 		ajax_data = cached_ajax_data
@@ -426,29 +451,31 @@ def get_match_rosters(request, match_id):
 
 	if not match_url or match_id not in match_url:
 		current_player = get_object_or_404(Player, api_id__iexact=account_id)
-		match_id = match_id = match.api_id.split('_')[1]
+		match_id = match.api_id.split('_')[1]
 		platform_url = current_player.platform_url
 		match_url = build_match_url(platform_url, match_id)
 	
 	match_json = make_request(match_url)
 
-	match_roster_cache = f'{match_id}_roster'
+	match_roster_cache = api_settings.MATCH_ROSTER_CACHE_KEY.format(match_id)
 
 	rosters = cache.get(match_roster_cache, None)
 
-	telemetry = get_match_telemetry_from_match(
-		match_json=match_json,
-		match=match,
-		return_early=True
-	)
+	if not rosters:
 
-	rosters = create_leaderboard_for_match(
-		match_json=telemetry,
-		telemetry=None,
-		save=False
-	)
+		telemetry = get_match_telemetry_from_match(
+			match_json=match_json,
+			match=match,
+			return_early=True
+		)
 
-	cache.set(match_roster_cache, rosters, 60*60)
+		rosters = create_leaderboard_for_match(
+			match_json=telemetry,
+			telemetry=None,
+			save=False
+		)
+
+		cache.set(match_roster_cache, rosters, 60*60)
 
 	return Response(rosters)
 
