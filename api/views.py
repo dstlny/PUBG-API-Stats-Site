@@ -135,8 +135,7 @@ def search(request):
 					ajax_data['currently_processing'] = False
 
 			else:
-				message = "No new matches to process for this user."
-				ajax_data['message'] = message
+				ajax_data['message'] =  "No new matches to process for this user."
 				ajax_data['no_new_matches'] = True
 				if not cached_player_url:
 					cache.touch(player_player_url_cache_key, 120)
@@ -146,12 +145,10 @@ def search(request):
 					cache.touch(player_player_response_cache_key, 120)
 
 		else:
-			error = "Sorry, looks like this player has not played any matches in the last 14 days."
-			ajax_data['error'] = error
+			ajax_data['error'] = "Sorry, looks like this player has not played any matches in the last 14 days."
 
 	else:
-		error = "Sorry, looks like this player does not exist."
-		ajax_data['error'] = error
+		ajax_data['error'] = "Sorry, looks like this player does not exist."
 
 	return Response(ajax_data)
 
@@ -248,7 +245,7 @@ def retrieve_matches(request):
 
 			new_ajax_data = cached_ajax_data
 
-			data = [
+			new_ajax_data['data'] = [
 				{
 					'id': roster.match.id,
 					'map': roster.match.map.name if roster.match.map else None,
@@ -259,8 +256,6 @@ def retrieve_matches(request):
 					'actions': f'<a href="/match_detail/{roster.match.api_id}/" class="btn btn-link btn-sm active" role="button">View Match</a>'
 				} for roster in match_data
 			]
-
-			new_ajax_data['data'] = data
 			new_ajax_data['match_ids'] = cached_match_ids
 
 			cache.set(player_match_data_cache, new_ajax_data, 60)
@@ -416,6 +411,7 @@ def retrieve_season_stats(request):
 						dict_key = f"ranked_{x.lower().replace('-', '_')}_season_stats"
 					else:
 						dict_key = f"{x.lower().replace('-', '_')}_season_stats"
+						
 					if dict_key not in y:
 					 	modes_not_added.append(x)
 
@@ -518,8 +514,12 @@ def match_detail(request, match_id):
 			telemetry = telemetry.first()
 		else:
 			telemetry = telemetry_exists.first()
+			# telemetry.delete()
 
 		telemetry_events = TelemetryEvent.objects.filter(telemetry=telemetry)
+		# telemetry_events.delete()
+
+		# print('deleted')
 
 		log_match_start = get_object_or_404(telemetry_events, event_type__iexact='LogMatchStart')
 		total_match_kills = get_object_or_404(telemetry_events, event_type__iexact='LogTotalMatchKills')
@@ -586,8 +586,10 @@ def match_detail(request, match_id):
 						{
 							'timestamp': datetime.strftime(parse(x.timestamp), '%H:%M:%S'),
 							'event': x.description,
-							'x_cord': x.x_cord,
-							'y_cord': x.y_cord
+							'killer_x_cord': x.killer_x_cord,
+							'killer_y_cord': x.killer_y_cord,
+							'victim_x_cord': x.victim_x_cord,
+							'victim_y_cord': x.victim_y_cord
 						} for x in telemetry_excluding_some_events
 					],
 					'player_breakdown':{
@@ -610,5 +612,5 @@ def match_detail(request, match_id):
 				}
 			}
 		}
-		
+
 		return Response(telemetry_data)

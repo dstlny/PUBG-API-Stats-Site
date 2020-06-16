@@ -714,22 +714,14 @@ def create_leaderboard_for_match(match_json, telemetry, save=True):
 			TelemetryEvent(
 				event_type='AICount',
 				telemetry=telemetry,
-				description=ais,
-				timestamp=None,
-				player=None,
-				x_cord=None,
-				y_cord=None
+				description=ais
 			)
 		)
 		telemetry_events.append(
 			TelemetryEvent(
 				event_type='PlayerCount',
 				telemetry=telemetry,
-				description=non_ais,
-				timestamp=None,
-				player=None,
-				x_cord=None,
-				y_cord=None
+				description=non_ais
 			)
 		)
 		TelemetryEvent.objects.bulk_create(telemetry_events)
@@ -871,8 +863,12 @@ def parse_match_telemetry(url, asset_id, telemetry_data, date_created, match, ac
 					killer_x = log_event['killer']['location']['x']
 					killer_y = log_event['killer']['location']['y']
 
-					victim_x = None
-					victim_y = None
+					if 'victim' in log_event:
+						victim_x = log_event['victim']['location']['x']
+						victim_y = log_event['victim']['location']['y']
+					else:
+						victim_x = killer_x
+						victim_y = killer_y
 					
 					if killer_id == account_id:
 						match_kills += 1
@@ -887,8 +883,15 @@ def parse_match_telemetry(url, asset_id, telemetry_data, date_created, match, ac
 
 					victim_x = log_event['victim']['location']['x']
 					victim_y = log_event['victim']['location']['y']
-					killer_x = victim_x
-					killer_y = victim_y
+
+					killer = log_event.get('killer')
+
+					if killer:
+						killer_x = log_event['killer']['location']['x']
+						killer_y = log_event['killer']['location']['y']
+					else:
+						killer_x = victim_x
+						killer_y = victim_y
 
 					damage_type = log_event.get('damageTypeCategory')
 
@@ -915,14 +918,26 @@ def parse_match_telemetry(url, asset_id, telemetry_data, date_created, match, ac
 				else:
 					if is_killer_ai:
 						if is_victim_ai:
-							event_description = f'<i class="fas fa-robot"></i> <b>{killer_name}</b> killed <i class="fas fa-robot"></i><b>{victim_name}</b> with a <b>{kill_cause}</b>'
+							if killer_name == 'Damage_Drown':
+								event_description = f'<i class="fas fa-robot"></i> <b>{victim_name}</b> died by drowning'
+							else:
+								event_description = f'<i class="fas fa-robot"></i> <b>{killer_name}</b> killed <i class="fas fa-robot"></i><b>{victim_name}</b> with a <b>{kill_cause}</b>'
 						else:
-							event_description = f'<i class="fas fa-robot"></i> <b>{killer_name}</b> killed <i class="fas fa-user"></i> <b>{victim_name}</b> with a <b>{kill_cause}</b>'
+							if killer_name == 'Damage_Drown':
+								event_description = f'<i class="fas fa-user"></i> <b>{victim_name}</b> died by drowning'
+							else:
+								event_description = f'<i class="fas fa-robot"></i> <b>{killer_name}</b> killed <i class="fas fa-user"></i> <b>{victim_name}</b> with a <b>{kill_cause}</b>'
 					else:
 						if is_victim_ai:
-							event_description = f'<i class="fas fa-user"></i> <b>{killer_name}</b> killed <i class="fas fa-robot"></i><b>{victim_name}</b> with a <b>{kill_cause}</b>'
+							if killer_name == 'Damage_Drown':
+								event_description = f'<i class="fas fa-robot"></i> <b>{victim_name}</b> died by drowning'
+							else:
+								event_description = f'<i class="fas fa-user"></i> <b>{killer_name}</b> killed <i class="fas fa-robot"></i><b>{victim_name}</b> with a <b>{kill_cause}</b>'
 						else:
-							event_description = f'<i class="fas fa-user"></i> <b>{killer_name}</b> killed <i class="fas fa-user"></i> <b>{victim_name}</b> with a <b>{kill_cause}</b>'
+							if killer_name == 'Damage_Drown':
+								event_description = f'<i class="fas fa-user"></i> <b>{victim_name}</b> died by drowning'
+							else:
+								event_description = f'<i class="fas fa-user"></i> <b>{killer_name}</b> killed <i class="fas fa-user"></i> <b>{victim_name}</b> with a <b>{kill_cause}</b>'
 
 				append(TelemetryEvent(
 					event_type=event_type,
@@ -930,8 +945,10 @@ def parse_match_telemetry(url, asset_id, telemetry_data, date_created, match, ac
 					description=event_description,
 					telemetry_id=telem_id,
 					player_id=player_id,
-					x_cord=killer_x,
-					y_cord=killer_y
+					killer_x_cord=killer_x,
+					killer_y_cord=killer_y,
+					victim_x_cord=victim_x,
+					victim_y_cord=victim_y
 				))
 				
 				if match_kills:

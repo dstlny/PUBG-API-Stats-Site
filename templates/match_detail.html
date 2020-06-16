@@ -15,10 +15,10 @@
 
 		const x_y_co_ords = [
 			{%- for telemetry in telemetry_data.match_data.events -%}
-				{%- if telemetry.x_cord -%}
+				{%- if telemetry.killer_x_cord -%}
 					{
-						x: '{{- telemetry.x_cord -}}',
-						y: '{{- telemetry.y_cord -}}',
+						x: '{{- telemetry.killer_x_cord -}}',
+						y: '{{- telemetry.killer_y_cord -}}',
 						id: 'telem_{{- loop.index -}}'
 					},
 				{%- endif -%}
@@ -297,7 +297,7 @@
 					<div class="list-group d-flex flex-row flex-wrap" style='width: 100%' id='map_container'>
 						<canvas id="map_canvas" width="100%"></canvas>
 						{%- for telemetry in telemetry_data.match_data.events -%}
-							{%- if telemetry.x_cord -%}
+							{%- if telemetry.killer_x_cord -%}
 								<div class="card mb-3" id='telem_{{- loop.index -}}' style="max-width: auto; display: none;">
 									<div class="card-header">
 										Timestamp: <b>{{ telemetry.timestamp }}</b>

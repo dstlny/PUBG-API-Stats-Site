@@ -443,12 +443,20 @@ $(document).ready(function() {
 		}
 		
 	}
-	
+
+	$.fn.dataTable.moment('dd/mm/YYYY hh:ii:ss');
+
 	table = $('#results_datatable').DataTable({
 		data: [],
 		paging: true,
 		bFilter: true,
 		bLengthChange: true,
+		columnDefs: [
+			{
+				targets: 2,
+				render: $.fn.dataTable.moment('dd/mm/YYYY hh:ii:ss')
+			}
+		],
 		columns: [
 			{ 
 				className:'details-control',
@@ -458,7 +466,7 @@ $(document).ready(function() {
 			},
 			{ width: '10%' }, // map
 			{ width: '10%' }, // mode
-			{ width: '15%', type: "date" }, // created
+			{ width: '15%' }, // created
 			{ width: '10%' }, // placement
 			{ width: '30%' }, // details
 			{ width: '20%' }, // actions
