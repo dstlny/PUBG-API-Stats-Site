@@ -479,7 +479,7 @@ def get_match_rosters(request, match_id):
 def match_detail(request, match_id):
 
 	match_detail_cache_key = api_settings.MATCH_DETAIL_CACHE_KEY.format(match_id)
-	match_detail_response = cach.get(match_detail_cache_key, None)
+	match_detail_response = cache.get(match_detail_cache_key, None)
 
 	if not match_detail_response:
 
