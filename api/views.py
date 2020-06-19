@@ -478,139 +478,146 @@ def get_match_rosters(request, match_id):
 @api_view(['GET'])
 def match_detail(request, match_id):
 
-	matches = Match.objects.only('api_id')
-	match_exists =  matches.filter(api_id__iexact=match_id)
-	telemetry_objects = Telemetry.objects.filter(match__in=matches)
+	match_detail_cache_key = api_settings.MATCH_DETAIL_CACHE_KEY.format(match_id)
+	match_detail_response = cach.get(match_detail_cache_key, None)
 
-	split = match_id.split('_')
-	account_id = split[0]
-	match_id = split[1]
+	if not match_detail_response:
 
-	if match_exists.exists():
-		current_player = get_object_or_404(Player, api_id=account_id)
-		player_name = Participant.objects.filter(player=current_player).latest('id').player_name
+		matches = Match.objects.only('api_id')
+		match_exists =  matches.filter(api_id__iexact=match_id)
+		telemetry_objects = Telemetry.objects.filter(match__in=matches)
 
-		match = match_exists.first()
-		telemetry_exists = telemetry_objects.filter(match=match)
+		split = match_id.split('_')
+		account_id = split[0]
+		match_id = split[1]
 
-		if not telemetry_exists.exists():
+		if match_exists.exists():
+			current_player = get_object_or_404(Player, api_id=account_id)
+			player_name = Participant.objects.filter(player=current_player).latest('id').player_name
 
-			match_url = match.api_url
+			match = match_exists.first()
+			telemetry_exists = telemetry_objects.filter(match=match)
 
-			if not match_url or match_id not in match_url:
-				platform_url = current_player.platform_url
-				match_url = build_match_url(platform_url, match_id)
+			if not telemetry_exists.exists():
 
-			match_json = make_request(match_url)
-			match_type = match_json['data']['attributes']['matchType']
+				match_url = match.api_url
 
-			get_match_telemetry_from_match(
-				match_json=match_json,
-				match=match,
-				return_early=False
-			)
+				if not match_url or match_id not in match_url:
+					platform_url = current_player.platform_url
+					match_url = build_match_url(platform_url, match_id)
 
-			telemetry = telemetry_objects.filter(match=match)
-			telemetry = telemetry.first()
-		else:
-			telemetry = telemetry_exists.first()
-			# telemetry.delete()
+				match_json = make_request(match_url)
+				match_type = match_json['data']['attributes']['matchType']
 
-		telemetry_events = TelemetryEvent.objects.filter(telemetry=telemetry)
-		# telemetry_events.delete()
+				get_match_telemetry_from_match(
+					match_json=match_json,
+					match=match,
+					return_early=False
+				)
 
-		# print('deleted')
+				telemetry = telemetry_objects.filter(match=match)
+				telemetry = telemetry.first()
+			else:
+				telemetry = telemetry_exists.first()
 
-		log_match_start = get_object_or_404(telemetry_events, event_type__iexact='LogMatchStart')
-		total_match_kills = get_object_or_404(telemetry_events, event_type__iexact='LogTotalMatchKills')
-		log_match_end = get_object_or_404(telemetry_events, event_type__iexact='LogMatchEnd')
-		roster_telem = get_object_or_404(TelemetryRoster, telemetry=telemetry)
-		roster_participant = RosterParticipant.objects.filter(roster__match=match, participant__player=current_player).first()
+			telemetry_events = TelemetryEvent.objects.filter(telemetry=telemetry)
 
-		log_match_start_timestamp = parse(log_match_start.timestamp)
-		log_match_start_timestamp = str(log_match_start_timestamp)
-		
-		if '+' in log_match_start_timestamp:
-			log_match_start_timestamp = str(log_match_start_timestamp).split('+')[0]
+			log_match_start = get_object_or_404(telemetry_events, event_type__iexact='LogMatchStart')
+			total_match_kills = get_object_or_404(telemetry_events, event_type__iexact='LogTotalMatchKills')
+			log_match_end = get_object_or_404(telemetry_events, event_type__iexact='LogMatchEnd')
+			roster_telem = get_object_or_404(TelemetryRoster, telemetry=telemetry)
+			roster_participant = RosterParticipant.objects.filter(roster__match=match, participant__player=current_player).first()
 
-		log_match_start_timestamp = str(log_match_start_timestamp).split('.')[0]
-		log_match_end_timestamp = parse(log_match_end.timestamp)
+			log_match_start_timestamp = parse(log_match_start.timestamp)
+			log_match_start_timestamp = str(log_match_start_timestamp)
+			
+			if '+' in log_match_start_timestamp:
+				log_match_start_timestamp = str(log_match_start_timestamp).split('+')[0]
 
-		log_match_end_timestamp = str(log_match_end_timestamp)
-		
-		if '+' in log_match_end_timestamp:
-			log_match_end_timestamp = str(log_match_end_timestamp).split('+')[0]
+			log_match_start_timestamp = str(log_match_start_timestamp).split('.')[0]
+			log_match_end_timestamp = parse(log_match_end.timestamp)
 
-		log_match_end_timestamp = str(log_match_end_timestamp).split('.')[0]
+			log_match_end_timestamp = str(log_match_end_timestamp)
+			
+			if '+' in log_match_end_timestamp:
+				log_match_end_timestamp = str(log_match_end_timestamp).split('+')[0]
 
-		FMT = '%Y-%m-%d %H:%M:%S'
-		
-		elapased_time = datetime.strptime(log_match_end_timestamp, FMT) - datetime.strptime(log_match_start_timestamp, FMT)
+			log_match_end_timestamp = str(log_match_end_timestamp).split('.')[0]
 
-		heals_items_used = telemetry_events.filter(event_type__iexact='LogItemUseMed').count()
-		boost_items_used = telemetry_events.filter(event_type__iexact='LogItemUseBoost').count()
+			FMT = '%Y-%m-%d %H:%M:%S'
+			
+			elapased_time = datetime.strptime(log_match_end_timestamp, FMT) - datetime.strptime(log_match_start_timestamp, FMT)
 
-		ai_events = telemetry_events.filter(event_type__iexact='AICount')
-		player_events = telemetry_events.filter(event_type__iexact='PlayerCount')
+			heals_items_used = telemetry_events.filter(event_type__iexact='LogItemUseMed').count()
+			boost_items_used = telemetry_events.filter(event_type__iexact='LogItemUseBoost').count()
 
-		ais = False
-		ai_count = 0
-		player_count = 0
-		ai_percentage = 0.00
-		
-		if ai_events.exists():
-			ai_count = int(ai_events.first().description)
-			ais = True
+			ai_events = telemetry_events.filter(event_type__iexact='AICount')
+			player_events = telemetry_events.filter(event_type__iexact='PlayerCount')
 
-		if player_events.exists():
-			player_count = int(player_events.first().description)
+			ais = False
+			ai_count = 0
+			player_count = 0
+			ai_percentage = 0.00
+			
+			if ai_events.exists():
+				ai_count = int(ai_events.first().description)
+				ais = True
 
-		total_count = ai_count + player_count
-		ai_percentage = round((ai_count / total_count) * 100)
-		player_percentage =  round((player_count / total_count) * 100)
+			if player_events.exists():
+				player_count = int(player_events.first().description)
 
-		telemetry_excluding_some_events = telemetry_events.exclude(Q(event_type__iexact='LogTotalMatchKills') | Q(event_type__iexact='Roster') | Q(timestamp__isnull=True))
+			total_count = ai_count + player_count
+			ai_percentage = round((ai_count / total_count) * 100)
+			player_percentage =  round((player_count / total_count) * 100)
 
-		match_map_url = match.map.image_url
-		map_name = match.map.name
+			telemetry_excluding_some_events = telemetry_events.exclude(Q(event_type__iexact='LogTotalMatchKills') | Q(event_type__iexact='Roster') | Q(timestamp__isnull=True))
 
-		telemetry_data = {
-			'telemetry_data':{
-				'match_data':{
-					'match_id': match_id,
-					'match_elapsed_time': f'{elapased_time} minutes',
-					'match_map_name': map_name,
-					'map_image': match_map_url,
-					'time_since': timesince(match.created),
-					'events': [
-						{
-							'timestamp': datetime.strftime(parse(x.timestamp), '%H:%M:%S'),
-							'event': x.description,
-							'killer_x_cord': x.killer_x_cord,
-							'killer_y_cord': x.killer_y_cord,
-							'victim_x_cord': x.victim_x_cord,
-							'victim_y_cord': x.victim_y_cord
-						} for x in telemetry_excluding_some_events
-					],
-					'player_breakdown':{
-						'ais': ais,
-						'ai_count': ai_count,
-						'ai_percentage': ai_percentage,
-						'player_count': player_count,
-						'player_percentage': player_percentage,
-						'total_count': total_count,
-						'rosters': roster_telem.json,
+			match_map_url = match.map.image_url
+			map_name = match.map.name
+
+			telemetry_data = {
+				'telemetry_data':{
+					'match_data':{
+						'match_id': match_id,
+						'match_elapsed_time': f'{elapased_time} minutes',
+						'match_map_name': map_name,
+						'map_image': match_map_url,
+						'time_since': timesince(match.created),
+						'events': [
+							{
+								'timestamp': datetime.strftime(parse(x.timestamp), '%H:%M:%S'),
+								'event': x.description,
+								'killer_x_cord': x.killer_x_cord,
+								'killer_y_cord': x.killer_y_cord,
+								'victim_x_cord': x.victim_x_cord,
+								'victim_y_cord': x.victim_y_cord
+							} for x in telemetry_excluding_some_events
+						],
+						'player_breakdown':{
+							'ais': ais,
+							'ai_count': ai_count,
+							'ai_percentage': ai_percentage,
+							'player_count': player_count,
+							'player_percentage': player_percentage,
+							'total_count': total_count,
+							'rosters': roster_telem.json,
+						}
+					},
+					'player_data':{
+						'player_kills': total_match_kills.description,
+						'player_damage': roster_participant.participant.damage,
+						'knocks': roster_participant.participant.knocks,
+						'player_name': player_name,
+						'boost_items_used': boost_items_used,
+						'heals_items_used': heals_items_used,
 					}
-				},
-				'player_data':{
-					'player_kills': total_match_kills.description,
-					'player_damage': roster_participant.participant.damage,
-					'knocks': roster_participant.participant.knocks,
-					'player_name': player_name,
-					'boost_items_used': boost_items_used,
-					'heals_items_used': heals_items_used,
 				}
 			}
-		}
 
-		return Response(telemetry_data)
+			cache.set(match_detail_cache_key, telemetry_data, 60*10)
+
+	else:
+
+		telemetry_data = match_detail_response
+
+	return Response(telemetry_data)
