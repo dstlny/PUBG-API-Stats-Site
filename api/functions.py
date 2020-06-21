@@ -198,22 +198,9 @@ def get_object_or_none(klass, *args, **kwargs):
 		logger.info(f'Tried to get {klass} object with kwargs {kwargs}, however returned None.')
 		return None
 
-def get_match_data(player_api_id, player_id, game_mode, perspective):
+def get_match_data(player_api_id, player_id):
 
 	kwargs = {}
-
-	if game_mode and perspective:
-		mode_fiter = "{}-{}".format(game_mode, perspective)
-		kwargs['match__mode__iexact'] = mode_fiter
-	elif game_mode:
-		mode_fiter = game_mode
-		kwargs['match__mode__icontains'] = mode_fiter
-	elif perspective:
-		mode_fiter = perspective
-		kwargs['match__mode__icontains'] = mode_fiter
-	else:
-		all_game_modes = list(set(Match.objects.values_list('mode', flat=True).distinct()))
-		kwargs['match__mode__in'] = all_game_modes
 
 	fourteen_days_in_past = timezone.now() - timedelta(days=15)
 	
@@ -221,9 +208,19 @@ def get_match_data(player_api_id, player_id, game_mode, perspective):
 	kwargs['match__api_id__icontains'] = player_api_id
 	kwargs['match__created__gte'] = fourteen_days_in_past
 
-	roster_data = Roster.objects.filter(**kwargs)\
-	.select_related('match')\
-	.prefetch_related('participants')
+	roster_data = Roster.objects.filter(
+		**kwargs
+	)\
+	.order_by(
+		'-match__created'
+	)\
+	.select_related(
+		'match',
+		'match__map'
+	)\
+	.prefetch_related(
+		'participants'
+	)
 
 	return roster_data
 

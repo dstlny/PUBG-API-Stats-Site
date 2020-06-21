@@ -1,4 +1,5 @@
 'use strict';
+
 var table; 
 
 $(document).ready(function() {
@@ -16,6 +17,8 @@ $(document).ready(function() {
 		no_matches: false,
 		retrieved: false,
 		ranked_showing: false,
+		matches_as_cards: false,
+		cards: [],
 
 		serialiseForm: function(){
 			return $('#search_form').serialize();
@@ -83,6 +86,73 @@ $(document).ready(function() {
 					document.getElementById(`ranked_`+elements[i]).innerHTML = ''
 				}
 			}
+		},
+		filterResults(){
+			let game_mode = this.getGameMode()
+			let perspective = this.getPerspective()
+
+			let filter = this.getGameModeFilter(game_mode, perspective)
+			
+			if(filter){
+
+				let cards_not_matching_filter  = $(`.roster_card:not([data-game-mode*='${filter}'])`);
+				let cards_matching_filter = $(`.roster_card[data-game-mode*='${filter}']`);
+				let not_matching_criteria_message = $('#not_matching')
+
+				if(this.matches_as_cards){
+					$('#datatable_container').hide()
+					$('#card_container').show()
+
+					if(cards_matching_filter.length >= 1){
+						not_matching_criteria_message.hide()
+						cards_not_matching_filter.hide()
+						cards_matching_filter.show()
+					} else {
+						not_matching_criteria_message.show()
+						cards_not_matching_filter.hide()
+						cards_matching_filter.hide()
+					}
+
+				} else {
+					$('#datatable_container').show()
+					$('#card_container').hide()
+					table.columns(2).search(filter).draw();
+				}
+			} else {
+				$(".roster_card").show();
+				table.search('').columns().search('').draw();
+				if(this.matches_as_cards){
+					$('#datatable_container').hide()
+					$('#card_container').show()
+				} else {
+					$('#datatable_container').show()
+					$('#card_container').hide()
+				}
+			}
+		},
+		getGameModeFilter(game_mode, perspective){
+
+			game_mode = game_mode == 'all' ? null : game_mode
+			perspective = perspective == 'all' ? null : perspective
+
+			if(!game_mode && !perspective){
+				return
+			}
+
+			if(game_mode){
+
+				if(perspective){
+					return `${game_mode}-${perspective}`
+				} else {
+					return `${game_mode}`
+				}
+
+			} else {
+				if(perspective){
+					return `${perspective}`
+				}
+			}
+
 		},
 		clearAll: function(window){
 			let id = Math.max(
@@ -199,8 +269,11 @@ $(document).ready(function() {
 						that.season_requested.ranked = false
 						that.season_requested.normal = false
 						$('#results_datatable').DataTable().clear().draw();
+						$('div.roster_card').remove()
+						console.log('cards have been emptied')
 						that.seen_match_ids = []
 						that.table_rosters = {}
+						that.cards = []
 						that.clearSeasonStats()
 					}
 				} else {
@@ -209,8 +282,11 @@ $(document).ready(function() {
 					that.season_requested.ranked = false
 					that.season_requested.normal = false
 					$('#results_datatable').DataTable().clear().draw();
+					$('div.roster_card').remove()
+					console.log('cards have been emptied')
 					that.seen_match_ids = []
 					that.table_rosters = {}
+					that.cards = []
 					that.clearSeasonStats()
 				}
 			}
@@ -224,9 +300,11 @@ $(document).ready(function() {
 			}).done(function(data){
 				if(data.player_id && data.player_name){
 					that.setPlayerName(data.player_name)
+					that.setLastPlayerName(data.player_name)
 					that.setPlayerId(data.player_id)
 					if(!data.currently_processing){
-						that.loadResultsDataTable();	
+						that.loadResultsDataTable();
+						that.retrieved = true	
 					} else {
 						$("#error").hide()
 						if(data.no_new_matches){
@@ -240,6 +318,7 @@ $(document).ready(function() {
 							setTimeout(function(){
 								that.loadResultsDataTable();
 							}, 5000);
+							that.retrieved = true	
 						}
 					}
 				} else if(data.error){
@@ -252,7 +331,6 @@ $(document).ready(function() {
 			});
 		},
 		formatChildRow: function(id) {
-			// `d` is the original data object for the row
 			let generated_datatable_id = `rosters_datatable_${id}`
 		
 			let generated_row_data =`
@@ -276,17 +354,48 @@ $(document).ready(function() {
 		
 			return obj
 		},
+		formatRosterCardTable(data){
+			let generated_table_rows = `
+			<div class='col-md-12'>
+				<table class="table table-bordered">
+					<thead>
+						<tr>
+							<th class='card-header text-center'>Name</th>
+							<th class='card-header text-center'>Kills</th>
+							<th class='card-header text-center'>Damage</th>
+						</tr>
+					</thead>
+					<tbody>
+			`
+			let len;
+			let i;
+				
+			for (i=0, len=data.length; i < len; i++){
+				generated_table_rows += `
+					<tr>
+						<td class='text-center'>${data[i].player_name}</td>
+						<td class='text-center'>${data[i].kills}</td>
+						<td class='text-center'>${data[i].damage}</td>
+					</tr>
+				`
+			}
+			generated_table_rows += `
+					</tbody>
+				</table>
+			</div>`
+			
+			return generated_table_rows
+		
+		},
 		getResults: function(){
 			var data = {
 				player_id: this.getPlayerId(),
-				platform: this.getPlatform(),
-				game_mode: this.getGameMode(),
-				perspective: this.getPerspective(),
-				times_requested: this.times_requested,
-				seen_match_ids: this.seen_match_ids
+				platform: this.getPlatform()
 			}
 
 			let that = this
+
+			let display_as_cards = that.display_as_cards
 
 			$.ajax({
 				url: that.getMatchesEndpoint(),
@@ -297,26 +406,133 @@ $(document).ready(function() {
 					let i;
 					let match_id;
 					let len;
+					let player_name = that.getPlayerName();
+					let kills;
+					let len2;
+					let map;
+					let mode;
+					let date_created;
+					let team_placement;
+					let team_details;
+					let actions;
+					let btn_link;
+					let time_since;
+					let team_details_object;
+					let j;
+					let card_template;
+					let card;
+					let raw_mode;
 				
 					that.setPlayerId(result.player_id)
+
 					for (i = 0, len=result.data.length; i < len; i++){
 						match_id = result.data[i].id
-						if(!data.seen_match_ids.includes(match_id)){
-							data.seen_match_ids.push(match_id)
+						if(!that.seen_match_ids.includes(match_id)){
+							that.seen_match_ids.push(match_id)
+
+							map = result.data[i].map
+							mode = result.data[i].mode
+							date_created = result.data[i].date_created
+							team_placement = result.data[i].team_placement
+							team_details = result.data[i].team_details
+							actions = result.data[i].actions
+							btn_link = result.data[i].btn_link
+							raw_mode = result.data[i].raw_mode
+							time_since = result.data[i].time_since
+							team_details_object = result.data[i].team_details_object
+
 							let row_node = table.row.add([
 								'',
-								result.data[i].map,
-								result.data[i].mode,
-								result.data[i].date_created,
-								result.data[i].team_placement,
-								result.data[i].team_details,
-								result.data[i].actions
+								map,
+								mode,
+								date_created,
+								team_placement,
+								team_details,
+								actions
 							]).node();
 							$(row_node).attr("id", match_id);
+							
+							for (j = 0, len2=team_details_object.length; j < len2; j++){
+								if(team_details_object[j].player_name == player_name){
+									kills = team_details_object[j].kills
+								}
+							}
+
+							let generated_team_data = that.formatRosterCardTable(team_details_object)
+
+							let display = 'display: inline-block';
+							if(!display_as_cards){
+								display = 'display: none;'
+							} 
+
+							card_template =  `
+								<div class="col-md-4 roster_card" data-game-mode="${raw_mode.toLowerCase()}" style='margin-bottom: 15px; ${display}'>
+									<div class="card shadow-sm">
+										<div class="card-header">
+											<span class='float-left'>${map}</span>
+											<span class='float-right'>${time_since}</span>
+										</div>
+										<div class="card-body" style='padding: 20px'>
+											<div class='row'>
+												<a role="button" style='margin-left: 15px; margin-right: 15px' href="${btn_link}" class='btn btn-primary btn-block stretched-link'>View match</a>
+											</div>
+											<div class='row top-buffer'>
+												<div class='col-md-6'>
+													<span class="w-100 badge badge" style='padding: 20px; margin:0px; background-color: #f5f5f5'>
+														<h6>Place<br>${team_placement}</h6>
+													</span>
+												</div>
+												<div class='col-md-6'>
+													<span class="w-100 badge badge" style='padding: 20px; margin:0px; background-color: #f5f5f5'>
+														<h6>Kills<br><b>${kills}</b></h6>
+													</span>
+												</div>
+											</div>
+											<div class='row top-buffer'>
+												<div class='col-md-12'>
+													<table class="table table-bordered">
+														<tbody>
+															<tr>
+																<th class='card-header' width='40%'>Date Created</th>
+																<td class='card-body'>${date_created}</td>
+															</tr>
+															<tr>
+																<th class='card-header' width='40%'>Mode</th>
+																<td class='card-body'>${mode}</td>
+															</tr>
+														</tbody>
+													</table>
+												</div>
+											</div>
+											<div class='row top-buffer'>
+												${generated_team_data}
+											</div>
+										</div>
+									</div>
+								</div>
+							`
+
+							card = {
+								date_created: date_created,
+								template: card_template
+							}
+							that.cards.push(card)
+
+
+							if(that.cards){					
+								$('div.roster_card').remove()
+					
+								let cards_i;
+								let cards_len;
+					
+								for (cards_i = 0, cards_len=that.cards.length; cards_i < cards_len; cards_i++){
+									$('#card_container_row').append(that.cards[cards_i].template)
+								}
+							}
 						}
 					}
 					table.draw(false)
-					that.times_requested += 1
+
 					that.no_matches = false
 					let ranked_tab = $('#ranked-tab')
 					let normal_tab = $('#normal-tab')
@@ -327,6 +543,7 @@ $(document).ready(function() {
 					normal_tab.addClass('active')
 					normal_tab.attr('aria-selected', true)
 					$("#currently_processing").hide()
+					that.filterResults()
 				}
 			}).fail(function(data){
 				that.tries += 1
@@ -499,6 +716,32 @@ $(document).ready(function() {
 			tr.addClass('shown');
 		}
 	});
+
+
+	$('#as_table').on('click', function () {
+		app.matches_as_cards = false
+		$('#datatable_container').show()
+		$('#card_container').hide()
+		$('.roster_card').hide()
+		app.filterResults()
+	});
+
+	$('#as_cards').on('click', function () {
+		app.matches_as_cards = true
+		$('#datatable_container').hide()
+		$('#card_container').show()
+		$('.roster_card').show()
+		app.filterResults()
+	});
+
+	$("#id_perspective").change(function() {
+		app.filterResults()
+	});
+
+	$("#id_game_mode").change(function() {
+		app.filterResults()
+	});
+
 
 	// basically, lets destroy the roster tables because, well, we're going to the next (or prev) page - no need to keep it around
 	table.on('page.dt', function() {
