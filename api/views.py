@@ -60,8 +60,8 @@ def search(request):
 
 	cached_player_response = cache.get(player_response_cache_key, None)
 
-	if cached_player_response:
-		return Response(cached_player_response))
+	if cached_player_response and 'data' in cached_player_response:
+		return Response(cached_player_response)
 
 	player_request_cache_key = api_settings.PLAYER_REQUEST_CACHE_KEY.format(player_name, platform)
 	player_platform_url_cache_key = api_settings.PLAYER_PLATFORM_URL_CACHE_KEY.format(player_name, platform)

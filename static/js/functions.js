@@ -270,7 +270,6 @@ $(document).ready(function() {
 						that.season_requested.normal = false
 						$('#results_datatable').DataTable().clear().draw();
 						$('div.roster_card').remove()
-						console.log('cards have been emptied')
 						that.seen_match_ids = []
 						that.table_rosters = {}
 						that.cards = []
@@ -283,7 +282,6 @@ $(document).ready(function() {
 					that.season_requested.normal = false
 					$('#results_datatable').DataTable().clear().draw();
 					$('div.roster_card').remove()
-					console.log('cards have been emptied')
 					that.seen_match_ids = []
 					that.table_rosters = {}
 					that.cards = []
@@ -317,7 +315,7 @@ $(document).ready(function() {
 							$('#currently_processing_message').text('Currently processing player, please bear with us...')
 							setTimeout(function(){
 								that.loadResultsDataTable();
-							}, 5000);
+							}, 1000*30);
 							that.retrieved = true	
 						}
 					}
@@ -488,24 +486,26 @@ $(document).ready(function() {
 													</span>
 												</div>
 											</div>
-											<div class='row top-buffer'>
-												<div class='col-md-12'>
-													<table class="table table-bordered">
-														<tbody>
-															<tr>
-																<th class='card-header' width='40%'>Date Created</th>
-																<td class='card-body'>${date_created}</td>
-															</tr>
-															<tr>
-																<th class='card-header' width='40%'>Mode</th>
-																<td class='card-body'>${mode}</td>
-															</tr>
-														</tbody>
-													</table>
+											<div class='detailed'>
+												<div class='row top-buffer'>
+													<div class='col-md-12'>
+														<table class="table table-bordered">
+															<tbody>
+																<tr>
+																	<th class='card-header' width='40%'>Date Created</th>
+																	<td class='card-body'>${date_created}</td>
+																</tr>
+																<tr>
+																	<th class='card-header' width='40%'>Mode</th>
+																	<td class='card-body'>${mode}</td>
+																</tr>
+															</tbody>
+														</table>
+													</div>
 												</div>
-											</div>
-											<div class='row top-buffer'>
-												${generated_team_data}
+												<div class='row top-buffer'>
+													${generated_team_data}
+												</div>
 											</div>
 										</div>
 									</div>
@@ -718,27 +718,28 @@ $(document).ready(function() {
 	});
 
 
-	$('#as_table').on('click', function () {
-		app.matches_as_cards = false
-		$('#datatable_container').show()
-		$('#card_container').hide()
-		$('.roster_card').hide()
-		app.filterResults()
-	});
+	$('#as_table, #as_detailed_cards, #as_compact_cards, #id_game_mode, #id_perspective').on('click', function (event) {
 
-	$('#as_cards').on('click', function () {
-		app.matches_as_cards = true
-		$('#datatable_container').hide()
-		$('#card_container').show()
-		$('.roster_card').show()
-		app.filterResults()
-	});
+		let id = $(this).attr('id')
 
-	$("#id_perspective").change(function() {
-		app.filterResults()
-	});
-
-	$("#id_game_mode").change(function() {
+		if(id.includes('table')){
+			app.matches_as_cards = false
+			$('#datatable_container').show()
+			$('#card_container').hide()
+			$('.roster_card').hide()
+		} else if(id.includes('detailed')){
+			app.matches_as_cards = true
+			$('#datatable_container').hide()
+			$('#card_container').show()
+			$('.roster_card').show()
+			$('.detailed').show()
+		} else if(id.includes('compact')){
+			app.matches_as_cards = true
+			$('#datatable_container').hide()
+			$('#card_container').show()
+			$('.roster_card').show()
+			$('.detailed').hide()
+		}
 		app.filterResults()
 	});
 
