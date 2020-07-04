@@ -7,7 +7,7 @@ from api.functions import (
 	build_url, build_lifetime_url, make_request, correct_perspective, correct_mode,
 	build_player_url, get_player_matches, retrieve_player_season_stats, build_player_account_id_url,
 	make_request, build_match_url, get_match_telemetry_from_match, get_match_data, create_leaderboard_for_match, get_player_match_id,
-	chunk_matches, parse_player_matches, parse_chunked_player_matches, player_placement_format
+	chunk_matches, parse_player_matches, parse_chunked_player_matches, player_placement_format, get_platform
 )
 
 from api.models import *
@@ -467,6 +467,7 @@ def match_detail(request, match_id):
 
 		telemetry_data = {
 			'telemetry_data':{
+				'platform': get_platform(current_player.platform_url),
 				'match_data':{
 					'match_id': match_id,
 					'match_elapsed_time': f'{elapased_time} minutes',

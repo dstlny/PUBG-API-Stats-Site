@@ -12,9 +12,16 @@ module.exports = function (fastify, opts, done) {
 		let api_response = await axios.get(url)
 		
 		if (api_response.status == 200) {
+			
+			let urls = []
+			let platform = api_response.data.telemetry_data.platform
+			let player_name = api_response.data.telemetry_data.player_data.player_name
+			urls.push({href: `/user/${player_name}/platform/${platform}/`, text: `${player_name}'s profile`})
+
 			return res.view('match_detail.html', {
 				telemetry_data: api_response.data.telemetry_data,
-				base_address: fastify.base_address
+				base_address: fastify.base_address,
+				urls: urls
 			})
 		} else {
 			console.log(api_response)

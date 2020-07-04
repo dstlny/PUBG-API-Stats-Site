@@ -173,6 +173,15 @@ $(document).ready(function() {
 			$("#currently_processing").hide();
 		},
 		retrievePlayerSeasonStats: function(ranked){
+
+			if(
+				(ranked && this.season_requested.ranked)
+				|| 
+				(!ranked && this.season_requested.normal)
+			){
+				return
+			}
+
 			let that = this
 			
 			if(ranked){
@@ -636,11 +645,9 @@ $(document).ready(function() {
 						break;
 					default:
 						if(this.ranked_showing){
-							$('#ranked_tpp_row').show()
-							$('#ranked_fpp_row').show()
+							$('#ranked_tpp_row, #ranked_fpp_row').show()
 						} else {
-							$('#tpp_row').show()
-							$('#fpp_row').show()
+							$('#tpp_row, #fpp_row').show()
 						}
 						break;
 				}
@@ -692,8 +699,7 @@ $(document).ready(function() {
 		order: [[ 3, "desc" ]],
 		processing: true,
 		language: {
-			processing: '<i class="fa fa-spinner fa-spin fa-fw"></i><span class="sr-only">Loading...</span> ',
-			emptyTable: 'Please enter a players name and press the <i class="fa fa-search"></i> icon'
+			emptyTable: '<i class="fa fa-spinner fa-spin fa-fw"></i> '
 		},
 	});
 
@@ -717,7 +723,6 @@ $(document).ready(function() {
 		}
 	});
 
-
 	$('#as_table, #as_detailed_cards, #as_compact_cards, #id_game_mode, #id_perspective').on('click', function (event) {
 
 		let id = $(this).attr('id')
@@ -725,20 +730,16 @@ $(document).ready(function() {
 		if(id.includes('table')){
 			app.matches_as_cards = false
 			$('#datatable_container').show()
-			$('#card_container').hide()
-			$('.roster_card').hide()
+			$('#card_container, .roster_card').hide()
 		} else if(id.includes('detailed')){
 			app.matches_as_cards = true
 			$('#datatable_container').hide()
-			$('#card_container').show()
-			$('.roster_card').show()
-			$('.detailed').show()
+			$('#card_container, .roster_card, .detailed').show()
 		} else if(id.includes('compact')){
 			app.matches_as_cards = true
-			$('#datatable_container').hide()
-			$('#card_container').show()
-			$('.roster_card').show()
-			$('.detailed').hide()
+			$('#datatable_container, .detailed').hide()
+			$('#card_container, .roster_card').show()
+
 		}
 		app.filterResults()
 	});
@@ -784,15 +785,8 @@ $(document).ready(function() {
 			app.ranked_showing = false
 		}
 
-		if(is_ranked){
-			if(!app.season_requested.ranked){
-				app.retrievePlayerSeasonStats(is_ranked)
-			}	
-		} else {
-			if(!app.season_requested.normal){
-				app.retrievePlayerSeasonStats(is_ranked)
-			}
-		}
+		app.retrievePlayerSeasonStats(is_ranked)
+
 	}
 
 	window.requestSeasonStats = requestSeasonStats
@@ -817,4 +811,6 @@ $(document).ready(function() {
 
 	});
 
+	$('#search_form').submit();
+	window.cookies()
 });

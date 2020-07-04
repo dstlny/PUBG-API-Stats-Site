@@ -1,7 +1,51 @@
 {% extends "base.html" %}
 
-{% block body %}
+{% block extra_functions %}
+	<script src="/static/js/cookies.js"></script>
 
+	<script type="text/javascript">
+		window.cookies = function(){
+			let player_names = window.getCookie('playerNames')
+
+			if(player_names){
+
+				let player_object = {
+					text: `Go to {{ player_name }}'s profile`,
+					href: window.location.href
+				}
+
+				if(player_names.some(player => player.text === player_object.text)){} else {
+					player_names.push(player_object)
+					window.setCookie('playerNames', player_names)
+				}
+
+				player_names = window.getCookie('playerNames')
+
+				if(player_names.length >= 5){
+					player_names = player_names.slice(-5)
+				}
+
+				let list = ''
+				for (let i = 0, len=player_names.length; i < len; i++){
+					let player = player_names[i]
+					let text = player.text
+					let href = player.href
+
+					if(player_names.some(player => href == window.location.href)){} else {
+						let link = `<div><a href="${href}">${text}</a></div>`
+						list += link
+					}
+				}
+				$('#recent_searches').append(list)
+				$('#recent_searches').show()
+			} else {
+				window.setCookie('playerNames', [])
+			}
+		}
+	</script>
+{% endblock %}
+
+{% block body %}
 	<style>
 		td.details-control {
 			background: url('https://www.datatables.net/examples/resources/details_open.png') no-repeat center center;
@@ -19,15 +63,22 @@
 		<div class='card-header' style="text-align: center">
 			Welcome!
 		</div>
-		<div class="card-body" style='padding-bottom:0'>
+		<div class="card-body" style='padding: 0'>
 			<br>
 			<form method="POST" action='/search' class="form-horizontal no-margin no-padding" style='margin-bottom: 0; padding-bottom: 0' id='search_form'>
-				{{ forms.search_field(name='player_name', type='text', placeholder='Enter a Players Name', required='true') }}
-				{{ forms.select_field(name='platform', type='text', required='true', options=platform_selections) }}
-				<hr>
+				{% set display_both = false %}
+				{{ forms.search_field(name='player_name', type='text', placeholder='Enter a Players Name', required='true', value=player_name, display=false) }}
+				{{ forms.select_field(name='platform', type='text', required='true', options=platform_selections, value=platform, display=false) }}
+				{% if display_both %}
+					<hr>
+				{% endif %}
 				<input type="submit" style="display: none"/>
 			</form>
 			{{ forms.select_field_two_one_line(name_one='perspective', required_one='false', options_one=perspective_selections, name_two='game_mode', required_two='false', options_two=gamemode_selections) }}
+			<div id='recent_searches' style='display: none; padding-left: 20px; padding-right: 20px; padding-bottom: 20px; pading-top: 5px'>
+				<hr>
+				<h6>Some of your recent Searches:</h6>
+			</div>
 			<input type="hidden" id="player_id" value="null">
 			<input type="hidden" id="player_name" value="null">
 			<input type="hidden" id="season_stats_endpoint" value="/retrieve_season_stats">

@@ -21,9 +21,7 @@
       "nodemon": "^2.0.4",
       "nunjucks": "*",
       "point-of-view": "*",
-      "reflect-metadata": "*",
-      "typeorm": "*",
-      "typeorm-model-generator": "^0.4.2"
+      "reflect-metadata": "*"
    },
    "devDependencies": {
       "@types/node": "^8.10.60",
