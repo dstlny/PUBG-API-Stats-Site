@@ -38,6 +38,8 @@ import logging
 
 import api.settings as api_settings
 
+from multiprocessing import Process
+
 logger = logging.getLogger('django')
 
 @api_view(['GET'])
@@ -57,26 +59,25 @@ def search(request):
 	platform = body.get('platform', None)
 
 	player_response_cache_key = api_settings.PLAYER_RESPONSE_CACHE_KEY.format(player_name, platform)
-
-	cached_player_response = cache.get(player_response_cache_key, None)
-
-	if cached_player_response and 'data' in cached_player_response:
-		return Response(cached_player_response)
-
 	player_request_cache_key = api_settings.PLAYER_REQUEST_CACHE_KEY.format(player_name, platform)
 	player_platform_url_cache_key = api_settings.PLAYER_PLATFORM_URL_CACHE_KEY.format(player_name, platform)
 	player_player_url_cache_key =  api_settings.PLAYER_URL_CACHE_KEY.format(player_name, platform)
 
-	cached_platform_url = cache.get(player_platform_url_cache_key, None)
-	cached_player_request = cache.get(player_request_cache_key, None)
+	cache_keys = cache.get_many([player_platform_url_cache_key, player_player_url_cache_key, player_platform_url_cache_key, player_request_cache_key, player_response_cache_key])
+
+	cached_platform_url = cache_keys.get(player_platform_url_cache_key)
+	cached_player_request = cache_keys.get(player_request_cache_key)
+	cached_player_response = cache_keys.get(player_response_cache_key, None)
+	cached_player_url = cache_keys.get(player_player_url_cache_key, None)
+
+	if cached_player_response and ('data' in cached_player_response or 'errors' in cached_player_response):
+		return Response(cached_player_response)
 
 	if not cached_platform_url:
 		platform_url = build_url(platform)
 		cache.set(player_platform_url_cache_key, platform_url, 60*30)
 	else:
 		platform_url = cached_platform_url
-
-	cached_player_url = cache.get(player_player_url_cache_key, None)
 
 	if not cached_player_url:
 		player_url = build_player_url(base_url=platform_url, player_name=player_name)
@@ -106,12 +107,24 @@ def search(request):
 
 		api_ids = list(set(Match.objects.values_list('api_id', flat=True).distinct()))
 
+		match_ids = []
+
 		if isinstance(player_request['data'], list):
 			player_id = player_request['data'][0]['id']
-			player_data_length = (len(player_request['data'][0]['relationships']['matches']['data']), [match['id'] for match in player_request['data'][0]['relationships']['matches']['data'] if get_player_match_id(player_id, match['id']) not in api_ids]) 
+			player_data_length = (
+				len(player_request['data'][0]['relationships']['matches']['data']),
+				[
+					match for match in player_request['data'][0]['relationships']['matches']['data'] if get_player_match_id(player_id, match['id']) not in api_ids
+				]
+			) 
 		else:
 			player_id = player_request['data']['id']
-			player_data_length = (len(player_request['data']['relationships']['matches']['data']), [match['id'] for match in player_request['data']['relationships']['matches']['data'] if get_player_match_id(player_id, match['id']) not in api_ids]) 
+			player_data_length = (
+				len(player_request['data']['relationships']['matches']['data']),
+				[
+					match for match in player_request['data']['relationships']['matches']['data'] if get_player_match_id(player_id, match['id']) not in api_ids
+				]
+			) 
 
 		if player_data_length[0] > 0:
 
@@ -119,6 +132,7 @@ def search(request):
 			ajax_data['player_name']  = player_name
 
 			length_of_matches = len(player_data_length[1])
+			matches = player_data_length[1]
 
 			if length_of_matches > 0:
 
@@ -128,12 +142,13 @@ def search(request):
 				if not currently_processing:
 					cache.set(player_currently_processing_cache_key, True, 60)
 					ajax_data['currently_processing'] = True
-					thread = threading.Thread(target=get_player_matches,  kwargs={
+					process = Process(target=get_player_matches,  kwargs={
+						'player_id': player_id,
 						'platform_url': platform_url,
-						'player_response': player_request
+						'matches': matches
 					})
-					thread.daemon = True
-					thread.start()
+					process.daemon = True
+					process.start()
 				else:
 					ajax_data['currently_processing'] = False
 
@@ -248,16 +263,12 @@ def retrieve_season_stats(request):
 
 	retrieve_player_season_stats(player_id,  platform, is_ranked)
 
-	all_game_modes = list(set(PlayerSeasonStats.objects.filter(mode__icontains='squad').values_list('mode', flat=True)))
-
 	season_stats_queryset = PlayerSeasonStats.objects.filter(
 		player=player,
 		season__is_current=True,
 		season__platform=platform,
 		is_ranked=is_ranked
 	).select_related('season')
-
-	modes_not_added = []
 
 	if is_ranked:
 
@@ -296,6 +307,7 @@ def retrieve_season_stats(request):
 	
 	if len(ajax_data) < 6:
 		modes_not_added = []
+		all_game_modes = list(set(PlayerSeasonStats.objects.only('mode').filter(mode__icontains='squad').values_list('mode', flat=True)))
 		for x in all_game_modes:
 			for y in ajax_data:
 				if is_ranked:

@@ -90,6 +90,7 @@ $(document).ready(function() {
 		filterResults(){
 			let game_mode = this.getGameMode()
 			let perspective = this.getPerspective()
+			let not_matching_criteria_message = $('#not_matching')
 
 			let filter = this.getGameModeFilter(game_mode, perspective)
 			
@@ -97,7 +98,6 @@ $(document).ready(function() {
 
 				let cards_not_matching_filter  = $(`.roster_card:not([data-game-mode*='${filter}'])`);
 				let cards_matching_filter = $(`.roster_card[data-game-mode*='${filter}']`);
-				let not_matching_criteria_message = $('#not_matching')
 
 				if(this.matches_as_cards){
 					$('#datatable_container').hide()
@@ -120,6 +120,7 @@ $(document).ready(function() {
 				}
 			} else {
 				$(".roster_card").show();
+				not_matching_criteria_message.hide()
 				table.search('').columns().search('').draw();
 				if(this.matches_as_cards){
 					$('#datatable_container').hide()
@@ -141,7 +142,7 @@ $(document).ready(function() {
 
 			if(game_mode){
 
-				if(perspective){
+				if(perspective && game_mode !== 'tdm'){
 					return `${game_mode}-${perspective}`
 				} else {
 					return `${game_mode}`
@@ -274,11 +275,10 @@ $(document).ready(function() {
 						}
 					} else {
 						that.retrieved = false
-						$('.loadingoverlay').remove()
+						$('.loadingoverlay, div.roster_card').remove()
 						that.season_requested.ranked = false
 						that.season_requested.normal = false
 						$('#results_datatable').DataTable().clear().draw();
-						$('div.roster_card').remove()
 						that.seen_match_ids = []
 						that.table_rosters = {}
 						that.cards = []
@@ -286,11 +286,10 @@ $(document).ready(function() {
 					}
 				} else {
 					that.retrieved = false
-					$('.loadingoverlay').remove()
+					$('.loadingoverlay, div.roster_card').remove()
 					that.season_requested.ranked = false
 					that.season_requested.normal = false
 					$('#results_datatable').DataTable().clear().draw();
-					$('div.roster_card').remove()
 					that.seen_match_ids = []
 					that.table_rosters = {}
 					that.cards = []
@@ -526,20 +525,25 @@ $(document).ready(function() {
 								template: card_template
 							}
 							that.cards.push(card)
-
-
-							if(that.cards){					
-								$('div.roster_card').remove()
-					
-								let cards_i;
-								let cards_len;
-					
-								for (cards_i = 0, cards_len=that.cards.length; cards_i < cards_len; cards_i++){
-									$('#card_container_row').append(that.cards[cards_i].template)
-								}
-							}
 						}
 					}
+
+					if(that.cards){				
+						that.cards.sort(function(a,b){
+							// Turn your strings into dates, and then subtract them
+							// to get a value that is either negative, positive, or zero.
+							return new Date(b.date_created) - new Date(a.date_created);
+						});	
+						$('div.roster_card').remove()
+			
+						let cards_i;
+						let cards_len;
+			
+						for (cards_i = 0, cards_len=that.cards.length; cards_i < cards_len; cards_i++){
+							$('#card_container_row').append(that.cards[cards_i].template)
+						}
+					}
+
 					table.draw(false)
 
 					that.no_matches = false
@@ -675,12 +679,9 @@ $(document).ready(function() {
 		paging: true,
 		bFilter: true,
 		bLengthChange: true,
-		columnDefs: [
-			{
-				targets: 2,
-				render: $.fn.dataTable.moment('dd/mm/YYYY hh:ii:ss')
-			}
-		],
+		order: [
+			[ 3, "desc" ]
+		], 
 		columns: [
 			{ 
 				className:'details-control',
@@ -690,7 +691,7 @@ $(document).ready(function() {
 			},
 			{ width: '10%' }, // map
 			{ width: '10%' }, // mode
-			{ width: '15%' }, // created
+			{ width: '15%', type: "date"  }, // created
 			{ width: '10%' }, // placement
 			{ width: '30%' }, // details
 			{ width: '20%' }, // actions
@@ -739,7 +740,6 @@ $(document).ready(function() {
 			app.matches_as_cards = true
 			$('#datatable_container, .detailed').hide()
 			$('#card_container, .roster_card').show()
-
 		}
 		app.filterResults()
 	});

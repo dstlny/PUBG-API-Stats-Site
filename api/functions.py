@@ -69,7 +69,7 @@ def build_url(platform):
 		)
 
 def get_platform(url):
-
+	
 	if 'steam' in url.strip().lower():
 		return 'steam'
 	elif 'xbox' in url.strip().lower():
@@ -148,44 +148,26 @@ def make_request(url):
 		time.sleep(2)
 		logger.info(f'For some reason, requesting {url} failed with the following error: {sys.exc_info()[1]}.')
 		make_request(url)
-	
+
 	return response
 
-def parse_player_object(platform_url, player_response):
+def parse_player_object(player_id, platform_url, matches):
 
-	if 'errors' not in player_response:
+	player_queryset = Player.objects.only('api_id')
 
-		match_queryset = Match.objects.only('api_id')
-		player_queryset = Player.objects.only('api_id')
+	if not player_queryset.filter(api_id__iexact=player_id).exists():
+		player = Player(
+			api_id=player_id,
+			platform_url=platform_url,
+			api_url=build_player_account_id_url(platform_url, player_id)
+		)
+		player.save()
+	
+	matches = [
+		make_request(build_match_url(platform_url, match['id'])) for match in matches
+	]
 
-		if isinstance(player_response['data'], list):
-			player_id = player_response['data'][0]['id']
-		else:
-			player_id = player_response['data']['id']
-
-		if not player_queryset.filter(api_id__iexact=player_id).exists():
-			player = Player(
-				api_id=player_id,
-				platform_url=platform_url,
-				api_url=build_player_account_id_url(platform_url, player_id)
-			)
-			player.save()
-
-		if isinstance(player_response['data'], list):
-			matches = [
-				make_request(build_match_url(platform_url, match['id'])) for match in player_response['data'][0]['relationships']['matches']['data']
-				if not match_queryset.filter(api_id=get_player_match_id(player_id, match['id'])).exists()
-			]
-		else:
-			matches = [
-				make_request(build_match_url(platform_url, match['id'])) for match in player_response['data']['relationships']['matches']['data']
-				if not match_queryset.filter(api_id=get_player_match_id(player_id, match['id'])).exists()
-			]
-
-		return player_id, matches
-	else:
-
-		return None, None
+	return  matches
 
 def get_player_match_id(player_id, match_id):
 	return "{}_{}".format(player_id, match_id)  
@@ -247,8 +229,8 @@ def player_placement_format(total_teams, placement):
 	
 def parse_player_matches(match_json_list, player_id, platform_url):
 
-	map_queryset = Map.objects.only('reference')
-	player_queryset = Player.objects.only('api_id')
+	map_queryset = Map.objects.only('id', 'reference')
+	player_queryset = Player.objects.only('id', 'api_id')
 
 
 	json_length = len(match_json_list)
@@ -258,6 +240,8 @@ def parse_player_matches(match_json_list, player_id, platform_url):
 	match_count = 0
 
 	total_time_taken = 0
+
+	save = True
 
 	for match in match_json_list:
 
@@ -281,6 +265,11 @@ def parse_player_matches(match_json_list, player_id, platform_url):
 
 			match_url = match['data']['links']['self']
 			match_url = match_url.replace('playbattlegrounds', 'pubg')
+			
+			match_participants =  [
+				x for x in match['included']
+				if x['type'] == 'participant'
+			]
 
 			match_map = map_queryset.filter(reference__iexact=match_map_reference)
 
@@ -289,7 +278,9 @@ def parse_player_matches(match_json_list, player_id, platform_url):
 					name=match_map,
 					reference=match_map_reference
 				)
-				match_map.save()
+
+				if save:
+					match_map.save()
 				map_id = match_map.id
 			else:
 				map_id = match_map.first().id
@@ -302,18 +293,15 @@ def parse_player_matches(match_json_list, player_id, platform_url):
 				api_url=match_url,
 				is_custom_match=match_custom,
 				match_type=match_type,
-				total_teams=len([
-					x for x in match['included']
-					if x['type'] == 'participant'
-				])
+				total_teams=len(match_participants)
 			)
-			this_match.save()
 
+			if save:
+				this_match.save()
 
 			current_player_parsed = [
-				x for x in match['included']
-				if x['type'] == 'participant'
-				and 'attributes' in x
+				x for x in match_participants
+				if 'attributes' in x
 				and 'stats' in x['attributes']
 				and x['attributes']['stats']['playerId'] == player_id
 			]
@@ -328,6 +316,7 @@ def parse_player_matches(match_json_list, player_id, platform_url):
 					z['id'] == this_participant_api_id for z in x['relationships']['participants']['data']
 				)
 			]
+			
 			roster_id = team_roster[0]['id']
 			roster_placement = team_roster[0]['attributes']['stats']['rank']
 
@@ -336,7 +325,9 @@ def parse_player_matches(match_json_list, player_id, platform_url):
 				match_id=this_match.id,
 				api_id=roster_id
 			)
-			roster.save()
+
+			if save:
+				roster.save()
 
 			roster_id = roster.id
 
@@ -345,9 +336,8 @@ def parse_player_matches(match_json_list, player_id, platform_url):
 			]
 
 			roster_participants = [
-				x for x in match['included']
-				if x['type'] == 'participant'
-				and x['id'] in roster_participant_ids
+				x for x in match_participants
+				if x['id'] in roster_participant_ids
 			]
 
 			for participant in roster_participants:
@@ -376,7 +366,9 @@ def parse_player_matches(match_json_list, player_id, platform_url):
 						platform_url=platform_url,
 						api_url=build_player_account_id_url(platform_url, player_id)
 					)
-					participant_player_object.save()
+
+					if save:
+						participant_player_object.save()
 				else:
 					participant_player_object = this_player.first()
 
@@ -395,7 +387,9 @@ def parse_player_matches(match_json_list, player_id, platform_url):
 					swim_distance=swim_distance,
 					walk_distance=walk_distance,
 				)
-				participant_object.save()
+
+				if save:
+					participant_object.save()
 
 				particpant_id = participant_object.id
 				
@@ -403,7 +397,9 @@ def parse_player_matches(match_json_list, player_id, platform_url):
 					roster_id=roster_id,
 					participant_id=particpant_id
 				)
-				roster_participant.save()
+
+				if save:
+					roster_participant.save()
 			
 			seconds_taken = "{:0.4f}".format(time.time() - start_time)
 			total_time_taken += time.time() - start_time
@@ -417,8 +413,8 @@ def parse_player_matches(match_json_list, player_id, platform_url):
 	message =  f"Took a total of {total_time_taken}(s)"
 	logger.info(message)
 
-def get_player_matches(platform_url, player_response):
-	player_id, player_matches = parse_player_object(platform_url, player_response)
+def get_player_matches(player_id, platform_url, matches):
+	player_matches = parse_player_object(player_id, platform_url, matches)
 	parse_player_matches(player_matches, player_id, platform_url)
 	player_currently_processing_cache_key = api_settings.PLAYER_CURRENTLY_PROCESSING_CACHE_KEY.format(player_id, get_platform(platform_url))
 	cache.set(player_currently_processing_cache_key, False, 60)

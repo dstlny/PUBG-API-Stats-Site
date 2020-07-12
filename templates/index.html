@@ -14,7 +14,7 @@
 					href: window.location.href
 				}
 
-				if(player_names.some(player => player.text === player_object.text)){} else {
+				if(!(player_names.some(player => player.text === player_object.text))) {
 					player_names.push(player_object)
 					window.setCookie('playerNames', player_names)
 				}
@@ -25,21 +25,21 @@
 					player_names = player_names.slice(-5)
 				}
 
-				let list = ''
-				for (let i = 0, len=player_names.length; i < len; i++){
-					let player = player_names[i]
-					let text = player.text
-					let href = player.href
+				let list = player_names.filter(function(player) {
+					return !(player.href == window.location.href) ?  true : false
+				}).map(player => {
+					return `<a href="${player.href}">${player.text}</a>`
+				})
 
-					if(player_names.some(player => href == window.location.href)){} else {
-						let link = `<div><a href="${href}">${text}</a></div>`
-						list += link
-					}
+				if(list.length >= 1){
+					$('#recent_searches').append(list.join(' | '))
+					$('#recent_searches').show()
+					$('#recent_searches').children().show()
 				}
-				$('#recent_searches').append(list)
-				$('#recent_searches').show()
 			} else {
 				window.setCookie('playerNames', [])
+				$('#recent_searches').hide()
+				$('#recent_searches').children().hide()
 			}
 		}
 	</script>

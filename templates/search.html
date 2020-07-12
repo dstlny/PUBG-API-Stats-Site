@@ -7,26 +7,22 @@
 		$(document).ready(function() {
 			let player_names = window.getCookie('playerNames')
 			
-			if(player_names){
+			if(player_names && player_names.length > 0){
 				
 				if(player_names.length >= 5){
 					player_names = player_names.slice(-5)
 				}
 
-				let list = ''
-				for (let i = 0, len=player_names.length; i < len; i++){
-					let player = player_names[i]
-					let text = player.text
-					let href = player.href
-					let link = `<div><a href="${href}">${text}</a></div>`
-					list += link
-				}
-				$('#recent_searches').append(list)
+				let list = player_names.map(player =>  `<a href="${player.href}">${player.text}</a>`);
+				
+				$('#recent_searches').append(list.join(' | '))
 				$('#recent_searches').show()
+				$('#recent_searches').children().show()
 			} else {
 				window.setCookie('playerNames', [])
-			}
-			
+				$('#recent_searches').hide()
+				$('#recent_searches').children().hide()
+			}			
 		});
 	</script>
 {% endblock %}
@@ -44,7 +40,7 @@
 				<input type="hidden" id="first_search" name='first_search' value="true">
 				<input type="submit" style="display: none"/>
 
-				<div id='recent_searches' style='display: none;'>
+				<div id='recent_searches'>
 					<hr>
 					<h6>Some of your recent Searches:</h6>
 				</div>
