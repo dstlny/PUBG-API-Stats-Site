@@ -1,7 +1,4 @@
 const constants = require('../../constants')
-const axios = require('axios')
-const { checkIfObjectInCookie } = require('../../utility')
-const util = require("util");
 
 module.exports = function (fastify, opts, done) {
 
@@ -35,4 +32,4 @@ module.exports = function (fastify, opts, done) {
 	})
 
 	done()
-  }
+}

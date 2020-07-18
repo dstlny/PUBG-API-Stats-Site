@@ -408,6 +408,7 @@ $(document).ready(function() {
 				type:'POST',
 				data: data,
 			}).done(function(result){
+				$('#seasons_container').show();
 				if(result.data){
 					let i;
 					let match_id;
@@ -459,9 +460,14 @@ $(document).ready(function() {
 							$(row_node).attr("id", match_id);
 							
 							for (j = 0, len2=team_details_object.length; j < len2; j++){
-								if(team_details_object[j].player_name == player_name){
+								let player_object_name = team_details_object[j].player_name;
+								if(player_object_name == player_name){
 									kills = team_details_object[j].kills
 								}
+							}
+
+							if(kills === undefined || typeof kills === 'undefined'){
+								kills = 0
 							}
 
 							let generated_team_data = that.formatRosterCardTable(team_details_object)
@@ -544,17 +550,11 @@ $(document).ready(function() {
 						}
 					}
 
-					table.draw(false)
+					if(!that.matches_as_cards){
+						table.draw(false)
+					}
 
 					that.no_matches = false
-					let ranked_tab = $('#ranked-tab')
-					let normal_tab = $('#normal-tab')
-					$('.collapse').collapse('hide');
-					$('#seasons_container').show();
-					ranked_tab.removeClass('active')
-					ranked_tab.attr('aria-selected', false)
-					normal_tab.addClass('active')
-					normal_tab.attr('aria-selected', true)
 					$("#currently_processing").hide()
 					that.filterResults()
 				}
@@ -666,6 +666,8 @@ $(document).ready(function() {
 			}).done(function(data){
 				if(data.backend_status == true){
 					that.down = true
+				} else {
+					that.down = false
 				}
 			});
 		}
@@ -680,7 +682,7 @@ $(document).ready(function() {
 		bFilter: true,
 		bLengthChange: true,
 		order: [
-			[ 3, "desc" ]
+			[ 3, "asc" ]
 		], 
 		columns: [
 			{ 
@@ -691,7 +693,7 @@ $(document).ready(function() {
 			},
 			{ width: '10%' }, // map
 			{ width: '10%' }, // mode
-			{ width: '15%', type: "date"  }, // created
+			{ width: '15%' }, // created
 			{ width: '10%' }, // placement
 			{ width: '30%' }, // details
 			{ width: '20%' }, // actions
@@ -732,6 +734,7 @@ $(document).ready(function() {
 			app.matches_as_cards = false
 			$('#datatable_container').show()
 			$('#card_container, .roster_card').hide()
+			table.draw(false)
 		} else if(id.includes('detailed')){
 			app.matches_as_cards = true
 			$('#datatable_container').hide()
@@ -792,7 +795,7 @@ $(document).ready(function() {
 	window.requestSeasonStats = requestSeasonStats
 
 	$(document).on('submit', 'form#search_form', function(event){
-
+		
 		$("#season_stats_button").click(function(self) {
 			if(!app.season_requested.normal){
 				app.retrievePlayerSeasonStats(false)

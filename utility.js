@@ -40,18 +40,8 @@ function checkStatusReturn(django_ip){
 	})
 }
 
-function checkIfObjectInCookie(object, cookie){
-	for (i = 0; i < cookie.length; i++) {
-		if (cookie[i].href === object.href) {
-			return true
-		}
-	}
-	return false
-}
-
 module.exports = {
 	checkStatusPromise: checkStatusPromise,
 	checkStatusLog: checkStatusLog,
-	checkStatusReturn: checkStatusReturn,
-	checkIfObjectInCookie: checkIfObjectInCookie
+	checkStatusReturn: checkStatusReturn
 }

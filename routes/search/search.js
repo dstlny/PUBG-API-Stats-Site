@@ -1,5 +1,5 @@
 const axios = require('axios')
-const { platform } = require('os')
+const constants = require('../../constants')
 
 module.exports = function (fastify, opts, done) {
 
@@ -56,7 +56,11 @@ module.exports = function (fastify, opts, done) {
 				return res.view('search.html', {
 					player_name: api_response.data.player_name,
 					platform: player_obj.platform,
-					messages: messages
+					messages: messages,
+					platform_selections: constants.PLATFORM_SELECTIONS,
+					gamemode_selections: constants.GAMEMODE_SELECTIONS,
+					perspective_selections: constants.PERSPECTIVE_SELECTIONS,
+					base_address: fastify.base_address,
 				}) 
 			} else {
 

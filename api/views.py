@@ -276,13 +276,13 @@ def retrieve_season_stats(request):
 			{
 				f"ranked_{x.mode.lower().replace('-', '_')}_season_stats": correct_mode(x.mode.replace('_', ' ')).upper(),
 				f"ranked_{x.mode.lower().replace('-', '_')}_season_matches": "{} {}".format(x.rounds_played, 'Matches Played'),
-				f"ranked_{x.mode.lower().replace('-', '_')}_season_kills__text": 'Kills',
+				f"ranked_{x.mode.lower().replace('-', '_')}_season_kills__text": 'Overall Kills',
 				f"ranked_{x.mode.lower().replace('-', '_')}_season_kills__figure": x.kills,
-				f"ranked_{x.mode.lower().replace('-', '_')}_season_damage__text": 'Damage Dealt',
+				f"ranked_{x.mode.lower().replace('-', '_')}_season_damage__text": 'Overal Damage Dealt',
 				f"ranked_{x.mode.lower().replace('-', '_')}_season_damage__figure": str(x.damage_dealt),
 				f"ranked_{x.mode.lower().replace('-', '_')}_season_longest_kill__text": 'Longest Kill',
 				f"ranked_{x.mode.lower().replace('-', '_')}_season_longest_kill__figure": str(x.longest_kill),
-				f"ranked_{x.mode.lower().replace('-', '_')}_season_headshots__text": 'Headshot kills',
+				f"ranked_{x.mode.lower().replace('-', '_')}_season_headshots__text": 'Overall Headshot kills',
 				f"ranked_{x.mode.lower().replace('-', '_')}_season_headshots__figure": x.headshot_kills
 			} for x in season_stats_queryset
 		]
@@ -293,13 +293,13 @@ def retrieve_season_stats(request):
 			{
 				f"{x.mode.lower().replace('-', '_')}_season_stats": correct_mode(x.mode.replace('_', ' ')).upper(),
 				f"{x.mode.lower().replace('-', '_')}_season_matches": "{} {}".format(x.rounds_played, 'Matches Played'),
-				f"{x.mode.lower().replace('-', '_')}_season_kills__text": 'Kills',
+				f"{x.mode.lower().replace('-', '_')}_season_kills__text": 'Overall Kills',
 				f"{x.mode.lower().replace('-', '_')}_season_kills__figure": x.kills,
-				f"{x.mode.lower().replace('-', '_')}_season_damage__text": 'Damage Dealt',
+				f"{x.mode.lower().replace('-', '_')}_season_damage__text": 'Overall Damage Dealt',
 				f"{x.mode.lower().replace('-', '_')}_season_damage__figure": str(x.damage_dealt),
 				f"{x.mode.lower().replace('-', '_')}_season_longest_kill__text": 'Longest Kill',
 				f"{x.mode.lower().replace('-', '_')}_season_longest_kill__figure": str(x.longest_kill),
-				f"{x.mode.lower().replace('-', '_')}_season_headshots__text": 'Headshot kills',
+				f"{x.mode.lower().replace('-', '_')}_season_headshots__text": 'Overall Headshot kills',
 				f"{x.mode.lower().replace('-', '_')}_season_headshots__figure": x.headshot_kills
 			} for x in season_stats_queryset
 		]
