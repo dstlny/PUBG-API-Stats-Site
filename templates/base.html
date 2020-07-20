@@ -74,6 +74,17 @@
 				<li class="nav-item active" style='padding: 10px'>
 					<a class="nav-link" href="/">Player Search</a>
 				</li>
+				<li class="nav-item dropdown" style='padding: 10px'>
+					<a class="nav-link dropdown-toggle" href="#" id="leaderboardsDropDown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+						Leaderboards
+					</a>
+					<div class="dropdown-menu" aria-labelledby="leaderboardsDropDown">
+						<a class="dropdown-item" href="/leaderboards/steam">Steam Leaderboards</a>
+						<a class="dropdown-item" href="/leaderboards/xbox">Xbox Leaderboards</a>
+						<a class="dropdown-item" href="/leaderboards/psn">Playstation Leaderboards</a>
+						<a class="dropdown-item" href="/leaderboards/kakao">Kakao Leaderboards</a>
+					</div>
+				</li>
 				{% if urls %}
 					{% for url in urls %}
 						<li class="nav-item active" style='padding: 10px'>

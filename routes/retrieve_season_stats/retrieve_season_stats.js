@@ -13,13 +13,12 @@ module.exports = function (fastify, opts, done) {
 			ranked: req.body.ranked
 		}
 
-		let api_response = await axios.post(`http://${django_ip}:8000/api/retrieve_season_stats`, player_obj)
-
-		if(api_response.status == 200){
+		axios.post(`http://${django_ip}:8000/api/retrieve_season_stats`, player_obj).then(function (api_response) {
 			return res.send(api_response.data)
-		} else {
-			console.log(api_response)
-		}
+		}).catch(function (api_response) {
+			return res.view('error.html')
+		})
+
 	})
 
 	done()

@@ -32,6 +32,7 @@ fastify.register(require('./routes/retrieve_matches/retrieve_matches'))
 fastify.register(require('./routes/backend_status/backend_status'))
 fastify.register(require('./routes/match_detail/match_detail'))
 fastify.register(require('./routes/match_roster/match_roster'))
+fastify.register(require('./routes/leaderboards/leaderboards'))
 
 
 fastify.listen(7009, async function (err, address){

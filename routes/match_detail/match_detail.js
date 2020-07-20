@@ -9,10 +9,7 @@ module.exports = function (fastify, opts, done) {
 
 		let url = `http://${django_ip}:8000/api/match_detail/${req.params.match_id}/`
 
-		let api_response = await axios.get(url)
-		
-		if (api_response.status == 200) {
-			
+		axios.get(url).then(function (api_response) {
 			let urls = []
 			let platform = api_response.data.telemetry_data.platform
 			let player_name = api_response.data.telemetry_data.player_data.player_name
@@ -23,9 +20,9 @@ module.exports = function (fastify, opts, done) {
 				base_address: fastify.base_address,
 				urls: urls
 			})
-		} else {
-			console.log(api_response)
-		}
+		}).catch(function (api_response) {
+			return res.view('error.html')
+		})
 	})
 
 	done()

@@ -8,16 +8,15 @@ module.exports = function (fastify, opts, done) {
 
 		let url = `http://${django_ip}:8000/api/match_rosters/${req.params.match_id}/`
 		
-		let api_response = await axios.get(url)
-		
-		if (api_response.status == 200) {
+		axios.get(url).then(function (api_response) {
 			return res.send({
 				rosters: api_response.data,
 				base_address: fastify.base_address
 			})
-		} else {
-			console.log(api_response)
-		}
+		}).catch(function (error) {
+			return res.view('error.html')
+		})
+	
 	})
 
 	done()

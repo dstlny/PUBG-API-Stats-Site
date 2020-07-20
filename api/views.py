@@ -7,7 +7,7 @@ from api.functions import (
 	build_url, build_lifetime_url, make_request, correct_perspective, correct_mode,
 	build_player_url, get_player_matches, retrieve_player_season_stats, build_player_account_id_url,
 	make_request, build_match_url, get_match_telemetry_from_match, get_match_data, create_leaderboard_for_match, get_player_match_id,
-	chunk_matches, parse_player_matches, parse_chunked_player_matches, player_placement_format, get_platform
+	chunk_matches, parse_player_matches, parse_chunked_player_matches, player_placement_format, get_platform, build_leaderboard_url
 )
 
 from api.models import *
@@ -520,3 +520,43 @@ def match_detail(request, match_id):
 		cache.set(match_detail_cache_key, telemetry_data, 60*10)
 
 		return Response(telemetry_data)
+
+@api_view(['GET'])
+def retrieve_leaderboard(request, platform, season_id, game_mode):
+
+	leaderboard_cache_key = api_settings.LEADERBOARDS_CACHE_KEY.format(platform, season_id, game_mode)
+
+	cached_data = cache.get(leaderboard_cache_key, None)
+
+	if cached_data:
+		return Response(cached_data)
+
+	platform_url = build_url(platform)
+	leaderboard_url = build_leaderboard_url(
+		base_url=platform_url,
+		season_id=season_id,
+		game_mode=game_mode
+	)
+	leaderboard_json = make_request(leaderboard_url)
+	cache.set(leaderboard_cache_key, leaderboard_json, 60 * 60 * 2)
+
+	return Response(leaderboard_json)
+
+
+@api_view(['GET'])
+def seasons_for_platform(request, platform):
+	
+	seasons = Season.objects.filter(platform=platform)
+
+	response = [
+		{
+			'value': season.api_id,
+			'text': season.api_id,
+			'attr': {
+				'name': 'data-requires-shard',
+				'value': season.requires_region_shard,
+			}
+		} for season in seasons
+	]
+
+	return Response(response)

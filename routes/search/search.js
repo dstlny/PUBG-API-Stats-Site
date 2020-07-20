@@ -16,9 +16,7 @@ module.exports = function (fastify, opts, done) {
 			platform: req.body.platform
 		}
 
-		let api_response = await axios.post(`http://${django_ip}:8000/api/search`, player_obj)
-
-		if(api_response.status == 200){
+		axios.post(`http://${django_ip}:8000/api/search`, player_obj).then(function (api_response) {
 
 			let error = api_response.data.error
 			let player_id = api_response.data.player_id
@@ -81,9 +79,10 @@ module.exports = function (fastify, opts, done) {
 					})
 				}
 			}
-		} else { 
-			console.error(api_response)
-		}
+		}).catch(function (error) {
+			return res.view('error.html')
+		})
+
 	})
 
 	done()

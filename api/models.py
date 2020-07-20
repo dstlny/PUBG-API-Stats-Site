@@ -123,6 +123,7 @@ class Season(models.Model):
 	is_off_season = models.IntegerField(blank=True, null=True)
 	api_url = models.CharField(max_length=255)
 	platform = models.CharField(max_length=255)
+	requires_region_shard = models.BooleanField(default=False)
 	
 	def __str__(self):
 		if self.is_current:

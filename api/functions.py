@@ -37,11 +37,20 @@ import logging
 logger = logging.getLogger('django')
 
 def build_url(platform):
-	if 'steam' in platform.strip().lower():
-		return "{}{}".format(
-			api_settings.BASE_API_URL,
-			api_settings.PC_SHARD
-		)
+	if 'steam' in platform.strip().lower() or 'pc' in platform.strip().lower():
+
+		if 'pc' in platform.strip().lower():
+			PC_SHARD = "shards/{}/".format(platform)
+			return "{}{}".format(
+				api_settings.BASE_API_URL,
+				PC_SHARD
+			)
+		else:
+			return "{}{}".format(
+				api_settings.BASE_API_URL,
+				api_settings.PC_SHARD
+			)
+			
 	elif 'xbox' in platform.strip().lower():
 		return "{}{}".format(
 			api_settings.BASE_API_URL,
@@ -128,6 +137,12 @@ def build_match_url(base_url, platform):
 		api_settings.MATCH_FILTER
 	).replace('$matchID', platform)
 
+def build_leaderboard_url(base_url, season_id, game_mode):
+	return "{}{}".format(
+		base_url,
+		api_settings.LEADERBOADS_FILTER
+	).replace('$seasonID', season_id).replace('$gameMode', game_mode)
+
 def correct_perspective(perspective):
 	return perspective.lower() if perspective and 'all' not in perspective.lower() else None
 
@@ -139,17 +154,16 @@ def get_map_name(map_codename):
 
 def make_request(url):
 
-	if 'season' in url:
+	if 'season' in url or 'leaderboard' in url:
 		time.sleep(6)
 
 	try:
 		response = json.loads(session.get(url, headers=api_settings.API_HEADER).content)
+		return response
 	except:
-		time.sleep(2)
+		time.sleep(6)
 		logger.info(f'For some reason, requesting {url} failed with the following error: {sys.exc_info()[1]}.')
 		make_request(url)
-
-	return response
 
 def parse_player_object(player_id, platform_url, matches):
 
@@ -184,17 +198,12 @@ def get_match_data(player_api_id, player_id):
 
 	kwargs = {}
 
-	fourteen_days_in_past = timezone.now() - timedelta(days=15)
-	
 	kwargs['participants__player_id'] = player_id
 	kwargs['match__api_id__icontains'] = player_api_id
-	kwargs['match__created__gte'] = fourteen_days_in_past
+	kwargs['match__created__gte'] = timezone.now() - timedelta(days=14)
 
 	roster_data = Roster.objects.filter(
 		**kwargs
-	)\
-	.order_by(
-		'-match__created'
 	)\
 	.select_related(
 		'match',
@@ -202,6 +211,9 @@ def get_match_data(player_api_id, player_id):
 	)\
 	.prefetch_related(
 		'participants'
+	)\
+	.order_by(
+		'-match__created'
 	)
 
 	return roster_data

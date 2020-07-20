@@ -15,18 +15,17 @@ module.exports = function (fastify, opts, done) {
 			seen_match_ids: req.body.seen_match_ids
 		}
 
-		let api_response = await axios.post(`http://${django_ip}:8000/api/retrieve_matches`, player_obj)
-
-		if(api_response.status == 200){
+		axios.post(`http://${django_ip}:8000/api/retrieve_matches`, player_obj).then(function (api_response) {
 			return res.send({
 				message: api_response.data.message,
 				data: api_response.data.data,
 				player_id: api_response.data.api_id,
 				error: api_response.data.error
 			})
-		} else {
-			console.log(api_response)
-		}
+		}).catch(function (error) {
+			return res.view('error.html')
+		})
+
 	})
 
 	done()

@@ -1,12 +1,12 @@
 {% macro text_field(name, value='', type='text', placeholder='', required='') %}
-    <div class="form-group col">
+    <div class="form-group col"  id='id_{{ name }}_container'>
         <input type="text" name="{{ name }}" placeholder="{{ placeholder }}" class="form-control" required="{{ required }}" id="id_{{ name }}">
     </div>
     <br>
 {% endmacro %}
 
 {% macro search_field(name,  placeholder='', required='', value='', display=true) %}
-    <div class="input-group col" {% if not display %}style='display: none;'{% endif  %}>
+    <div class="input-group col" {% if not display %}style='display: none;'{% endif  %} id='id_{{ name }}_container'>
         <input type="text" {% if value %}value='{{value}}'{% endif %} name="{{ name }}" placeholder="{{ placeholder }}" class="form-control" required="{{ required }}" id="id_{{ name }}">
         <span class="input-group-append">
             <button class="btn btn-outline-secondary" type="submit">
@@ -18,10 +18,10 @@
 {% endmacro %}
 
 {% macro select_field(name, required='', options=[], value='', display=true) %}
-    <div class="form-group col" {% if not display %}style='display: none;'{% endif  %}>
+    <div class="form-group col" {% if not display %}style='display: none;'{% endif  %} id='id_{{ name }}_container'>
         <select name="{{ name }}" class="form-control select" required="{{ required }}" id="id_{{ name }}">
             {% for option in options %}
-                <option value="{{ option.value }}" 
+                <option value="{{ option.value }}" {% if option.attr %}{{ option.attr.name }}="{{ option.attr.value }}"{% endif %}
                 {% if not value %}
                     {% if loop.first %}selected="true"{% endif %}
                 {% elif value == option.value %}
