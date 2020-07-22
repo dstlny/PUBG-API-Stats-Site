@@ -1,10 +1,10 @@
 const constants = require('../../constants')
 
-module.exports = function (fastify, opts, done) {
+module.exports = async function (fastify, opts, done) {
 
 	fastify.get('/', async(req, res) => {
 
-		return res.view('search.html', {
+		return res.code(200).view('search.html', {
 			platform_selections: constants.PLATFORM_SELECTIONS,
 			base_address: fastify.base_address
 		})
@@ -20,7 +20,7 @@ module.exports = function (fastify, opts, done) {
 		}
 		let urls = [player_object]
 
-		return res.view('index.html', {
+		return res.code(200).view('index.html', {
 			platform_selections: constants.PLATFORM_SELECTIONS,
 			gamemode_selections: constants.GAMEMODE_SELECTIONS,
 			perspective_selections: constants.PERSPECTIVE_SELECTIONS,

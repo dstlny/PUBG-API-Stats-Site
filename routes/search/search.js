@@ -1,7 +1,7 @@
 const axios = require('axios')
 const constants = require('../../constants')
 
-module.exports = function (fastify, opts, done) {
+module.exports = async function (fastify, opts, done) {
 
 	const django_ip = fastify.django_ip
 	
@@ -16,7 +16,7 @@ module.exports = function (fastify, opts, done) {
 			platform: req.body.platform
 		}
 
-		axios.post(`http://${django_ip}:8000/api/search`, player_obj).then(function (api_response) {
+		await axios.post(`http://${django_ip}:8000/api/search`, player_obj).then(function (api_response) {
 
 			let error = api_response.data.error
 			let player_id = api_response.data.player_id
@@ -51,7 +51,7 @@ module.exports = function (fastify, opts, done) {
 			}
 
 			if(error){
-				return res.view('search.html', {
+				return res.code(200).view('search.html', {
 					player_name: api_response.data.player_name,
 					platform: player_obj.platform,
 					messages: messages,
@@ -67,9 +67,9 @@ module.exports = function (fastify, opts, done) {
 						perspective: req.body.perspective,
 						platform: req.body.platform
 					}
-					return res.redirect(redirect, new_obj)
+					return res.code(302).redirect(redirect, new_obj)
 				} else {
-					return res.send({
+					return res.code(200).send({
 						player_id: player_id,
 						player_name: api_response.data.player_name,
 						currently_processing: currently_processing,
@@ -80,7 +80,7 @@ module.exports = function (fastify, opts, done) {
 				}
 			}
 		}).catch(function (error) {
-			return res.view('error.html')
+			return res.code(500).view('error.html')
 		})
 
 	})

@@ -1,6 +1,6 @@
 const axios = require('axios')
 
-module.exports = function (fastify, opts, done) {
+module.exports = async function (fastify, opts, done) {
 
 	const django_ip = fastify.django_ip
 
@@ -13,10 +13,10 @@ module.exports = function (fastify, opts, done) {
 			ranked: req.body.ranked
 		}
 
-		axios.post(`http://${django_ip}:8000/api/retrieve_season_stats`, player_obj).then(function (api_response) {
-			return res.send(api_response.data)
+		await axios.post(`http://${django_ip}:8000/api/retrieve_season_stats`, player_obj).then(function (api_response) {
+			return res.code(200).send(api_response.data)
 		}).catch(function (api_response) {
-			return res.view('error.html')
+			return res.code(500).view('error.html')
 		})
 
 	})

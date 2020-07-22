@@ -1,7 +1,7 @@
 const axios = require('axios')
 const constants = require('../../constants')
 
-module.exports = function (fastify, opts, done) {
+module.exports = async function (fastify, opts, done) {
 	
 	const django_ip = fastify.django_ip
 	
@@ -11,7 +11,7 @@ module.exports = function (fastify, opts, done) {
 
 		let url = `http://${django_ip}:8000/api/seasons_for_platform/${platform}/`
 		
-		axios.get(url).then(function (api_response) {
+		await axios.get(url).then(function (api_response) {
 			let seasons = api_response.data
 			let game_modes = [
 				{
@@ -48,7 +48,7 @@ module.exports = function (fastify, opts, done) {
 				}
 			})
 			
-			return res.view('leaderboards.html', {
+			return res.code(200).view('leaderboards.html', {
 				season_selections: seasons,
 				game_mode_selection: game_modes,
 				region_selection: regions,
@@ -56,7 +56,7 @@ module.exports = function (fastify, opts, done) {
 				platform: platform
 			})
 		}).catch(function (error) {
-			return res.view('error.html')
+			return res.code(500).view('error.html')
 		})
 		
 	})
@@ -69,10 +69,10 @@ module.exports = function (fastify, opts, done) {
 
 		let url = `http://${django_ip}:8000/api/leaderboards/${platform}/${season_id}/${game_mode}/`
 
-		axios.get(url).then(function (api_response) {
-			return res.send(api_response.data)
+		await axios.get(url).then(function (api_response) {
+			return res.code(200).send(api_response.data)
 		}).catch(function (error) {
-			return res.view('error.html')
+			return res.code(500).view('error.html')
 		})
 		
 	})

@@ -1,13 +1,13 @@
 const utlity = require('../../utility')
 const axios = require('axios')
 
-module.exports = function (fastify, opts, done) {
+module.exports = async function (fastify, opts, done) {
 	
 	fastify.get('/backend_status', async(req, res) => {
 
-		utlity.checkStatusPromise()
+		await utlity.checkStatusPromise()
 		.then(function(result) {
-			return res.send({
+			return res.code(200).send({
 				backend_status: result
 			})
 		})
