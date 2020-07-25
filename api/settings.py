@@ -38,7 +38,9 @@ MAP_BINDING = {
 PLAYER_PLATFORM_URL_CACHE_KEY = '{}_{}_platform_url'
 PLAYER_URL_CACHE_KEY = '{}_{}_player_url'
 PLAYER_REQUEST_CACHE_KEY = '{}_{}_player_request'
+PLAYER_REQUEST_CACHE_EXPIRY_KEY = '{}_{}_player_request_expiry'
 PLAYER_RESPONSE_CACHE_KEY = '{}_{}_player_response'
+
 PLAYER_CURRENTLY_PROCESSING_CACHE_KEY = '{}_{}_current_processing'
 PLAYER_MATCH_DATA_CACHE_KEY = '{}_match_data'
 PLAYER_RANKED_SEASON_STATS_CACHE_KEY = 'ranked_{}_season_data'
