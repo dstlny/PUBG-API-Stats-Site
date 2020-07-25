@@ -39,6 +39,7 @@ import logging
 import api.settings as api_settings
 
 from multiprocessing import Process
+from dateutil import parser
 
 logger = logging.getLogger('django')
 
@@ -50,7 +51,7 @@ def status(request):
 
 @api_view(['POST'])
 def search(request):
-	
+
 	start_time = time.time()
 
 	body = request.data
@@ -60,28 +61,32 @@ def search(request):
 
 	player_response_cache_key = api_settings.PLAYER_RESPONSE_CACHE_KEY.format(player_name, platform)
 	player_request_cache_key = api_settings.PLAYER_REQUEST_CACHE_KEY.format(player_name, platform)
+	player_request_cache_expiry_key = api_settings.PLAYER_REQUEST_CACHE_EXPIRY_KEY.format(player_name, platform)
+	
 	player_platform_url_cache_key = api_settings.PLAYER_PLATFORM_URL_CACHE_KEY.format(player_name, platform)
 	player_player_url_cache_key =  api_settings.PLAYER_URL_CACHE_KEY.format(player_name, platform)
 
-	cache_keys = cache.get_many([player_platform_url_cache_key, player_player_url_cache_key, player_platform_url_cache_key, player_request_cache_key, player_response_cache_key])
+	cache_keys = cache.get_many([player_platform_url_cache_key, player_player_url_cache_key, player_platform_url_cache_key, player_request_cache_key, player_response_cache_key, player_request_cache_expiry_key])
 
-	cached_platform_url = cache_keys.get(player_platform_url_cache_key)
-	cached_player_request = cache_keys.get(player_request_cache_key)
+	cached_platform_url = cache_keys.get(player_platform_url_cache_key, None)
+	cached_player_request = cache_keys.get(player_request_cache_key, None)
 	cached_player_response = cache_keys.get(player_response_cache_key, None)
 	cached_player_url = cache_keys.get(player_player_url_cache_key, None)
 
-	if cached_player_response and ('data' in cached_player_response or 'errors' in cached_player_response):
+	expiry = None
+
+	if cached_player_response:
 		return Response(cached_player_response)
 
 	if not cached_platform_url:
 		platform_url = build_url(platform)
-		cache.set(player_platform_url_cache_key, platform_url, 60*30)
+		cache.set(player_platform_url_cache_key, platform_url, 60*10)
 	else:
 		platform_url = cached_platform_url
 
 	if not cached_player_url:
 		player_url = build_player_url(base_url=platform_url, player_name=player_name)
-		cache.set(player_player_url_cache_key, player_url, 60*30)
+		cache.set(player_player_url_cache_key, player_url, 60*10)
 	else:
 		player_url = cached_player_url
 
@@ -94,8 +99,8 @@ def search(request):
 				potential_current_player = potential_current_player.first()
 				player_url = potential_current_player.player.api_url
 				player_request = make_request(player_url)
-				
-		cache.set(cached_player_request, player_request, 120)
+		
+		cache.set(player_request_cache_key, player_request, 60*30)
 	else:
 		player_request = cached_player_request
 
@@ -105,7 +110,7 @@ def search(request):
 
 	if 'data' in player_request:
 
-		api_ids = list(set(Match.objects.values_list('api_id', flat=True).distinct()))
+		api_ids = set(Match.objects.values_list('api_id', flat=True).distinct())
 
 		match_ids = []
 
@@ -130,7 +135,6 @@ def search(request):
 
 			ajax_data['player_id'] = player_id
 			ajax_data['player_name']  = player_name
-
 			length_of_matches = len(player_data_length[1])
 			matches = player_data_length[1]
 
@@ -169,6 +173,7 @@ def search(request):
 		ajax_data['error'] = "Sorry, looks like this player does not exist."
 
 	cache.set(player_response_cache_key, ajax_data, 120)
+
 	return Response(ajax_data)
 
 @api_view(['POST'])

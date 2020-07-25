@@ -11,9 +11,11 @@ module.exports = async function (fastify, opts, done) {
 
 	})
 
-	fastify.get('/user/:player_name/platform/:platform/', async(req, res) => {		
+	fastify.get('/user/:player_name/platform/:platform/', async(req, res) => {	
+		
 		let player_name = req.params.player_name
 		let platform = req.params.platform
+
 		let player_object = {
 			href: `/user/${player_name}/platform/${platform}/`,
 			text: `${player_name}'s profile` 

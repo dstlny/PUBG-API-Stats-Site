@@ -62,12 +62,8 @@ module.exports = async function (fastify, opts, done) {
 				}) 
 			} else {
 
-				if(typeof first_search !== 'undefined'){
-					let new_obj = {
-						perspective: req.body.perspective,
-						platform: req.body.platform
-					}
-					return res.code(302).redirect(redirect, new_obj)
+				if(first_search && typeof first_search !== 'undefined'){
+					return res.code(302).redirect(redirect)
 				} else {
 					return res.code(200).send({
 						player_id: player_id,
