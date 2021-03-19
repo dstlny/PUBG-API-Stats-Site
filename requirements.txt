@@ -14,7 +14,7 @@ chardet==3.0.4
 constantly==15.1.0
 cryptography==2.9.2
 daphne==2.5.0
-Django==3.0.7
+Django==3.1.6
 django-compat==1.0.15
 django-picklefield==2.1.1
 django-waitress==0.1.0
