@@ -15,7 +15,7 @@
       "fastify-formbody": "*",
       "fastify-static": "*",
       "fastify-typeorm": "*",
-      "minimist": "^1.2.5",
+      "minimist": "^1.2.6",
       "mysql2": "*",
       "node": "^14.2.0",
       "nodemon": "^2.0.4",
