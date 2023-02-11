@@ -18,7 +18,7 @@
       "minimist": "^1.2.5",
       "mysql2": "*",
       "node": "^14.2.0",
-      "nodemon": "^2.0.4",
+      "nodemon": "^2.0.20",
       "nunjucks": "*",
       "point-of-view": "*",
       "reflect-metadata": "*"
